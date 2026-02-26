@@ -34,6 +34,29 @@ All IPC channels defined in `src/shared/ipc.ts` — single source of truth.
 - Optimistic concurrency: `expected_head` in request body, hash from ETag response
 - 409 = concurrent modification → prompt user to reload or overwrite
 
+## Keyboard Shortcuts
+
+Governed by the federal standard: `~/dev/NEXUS/standards/UI_INTERACTION_STANDARD.md`
+
+### Universal (all NEXUS frontends)
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+S` | Save |
+| `Cmd+Shift+S` | Force Save |
+| `Cmd+K` | Command Palette |
+| `Cmd+B` | Toggle Left Pane |
+| `Cmd+Shift+B` | Toggle Capture Panel |
+| `Cmd+,` | Settings |
+| `Cmd+Z` / `Cmd+Shift+Z` | Undo / Redo |
+| `Escape` | Dismiss topmost overlay |
+
+### App-Specific
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+D` | Toggle Live/Draft mode |
+
 ## Forbidden Tools
 
 | Forbidden | Use Instead | Enforced By |
