@@ -27,6 +27,8 @@ describe('IPC channels', () => {
     expect(IPC.CAPTURE_STOP_POLLING).toBe('capture:stop-polling')
     expect(IPC.CAPTURE_STATE).toBe('capture:state')
     expect(IPC.APP_COMMAND).toBe('app:command')
+    expect(IPC.LAYOUT_GET).toBe('layout:get')
+    expect(IPC.LAYOUT_SET).toBe('layout:set')
   })
 
   it('channel values are unique', () => {

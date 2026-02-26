@@ -13,6 +13,7 @@ import type {
   BufferApplyChangesRequest,
   BufferConflict,
   BufferOpenRequest,
+  LayoutState,
   NavLoadHistoryRequest,
   NavLoadVersionRequest,
   NavRestoreVersionRequest,
@@ -22,7 +23,9 @@ import { IPC } from '../shared/ipc'
 import { BufferManager } from './buffer'
 import { CaptureManager } from './capture-manager'
 import { CosClient } from './cos-client'
+import { LayoutStore } from './layout-store'
 import { SettingsStore } from './settings'
+import { WindowStateStore } from './window-state'
 
 const HEALTH_CHECK_INTERVAL_MS = 10_000
 
@@ -31,12 +34,19 @@ let cosClient: CosClient
 let buffer: BufferManager
 let captureManager: CaptureManager
 let settings: SettingsStore
+let layout: LayoutStore
+let windowState: WindowStateStore
 let healthCheckTimer: ReturnType<typeof setInterval> | null = null
 
 function createWindow(): void {
+  const savedState = windowState.get()
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: savedState.width,
+    height: savedState.height,
+    ...(savedState.x !== undefined && savedState.y !== undefined
+      ? { x: savedState.x, y: savedState.y }
+      : {}),
     show: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -44,6 +54,55 @@ function createWindow(): void {
       sandbox: false,
       contextIsolation: true,
     },
+  })
+
+  if (savedState.isMaximized) {
+    mainWindow.maximize()
+  }
+
+  // Debounced save for move/resize events
+  let boundsTimer: ReturnType<typeof setTimeout> | null = null
+  const saveBoundsDebounced = (): void => {
+    if (boundsTimer) clearTimeout(boundsTimer)
+    boundsTimer = setTimeout(() => {
+      if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMaximized()) return
+      const bounds = mainWindow.getBounds()
+      windowState.set({
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+      })
+    }, 500)
+  }
+
+  mainWindow.on('resize', saveBoundsDebounced)
+  mainWindow.on('move', saveBoundsDebounced)
+
+  mainWindow.on('maximize', () => {
+    windowState.set({ isMaximized: true })
+  })
+
+  mainWindow.on('unmaximize', () => {
+    windowState.set({ isMaximized: false })
+  })
+
+  mainWindow.on('close', () => {
+    if (boundsTimer) clearTimeout(boundsTimer)
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    const isMax = mainWindow.isMaximized()
+    if (!isMax) {
+      const bounds = mainWindow.getBounds()
+      windowState.set({
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        isMaximized: false,
+      })
+    } else {
+      windowState.set({ isMaximized: true })
+    }
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -252,6 +311,15 @@ function registerIpcHandlers(): void {
     return updated
   })
 
+  // Layout
+  ipcMain.handle(IPC.LAYOUT_GET, () => {
+    return layout.get()
+  })
+
+  ipcMain.handle(IPC.LAYOUT_SET, (_event, partial: Partial<LayoutState>) => {
+    return layout.set(partial)
+  })
+
   ipcMain.handle(IPC.SETTINGS_TEST_CONNECTION, async () => {
     const start = performance.now()
     try {
@@ -336,8 +404,10 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Initialize settings
+  // Initialize settings and stores
   settings = new SettingsStore()
+  layout = new LayoutStore()
+  windowState = new WindowStateStore()
   const s = settings.get()
 
   // Initialize COS client

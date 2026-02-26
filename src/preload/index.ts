@@ -22,6 +22,7 @@ import type {
   BufferState,
   ConnectionTestResult,
   CosStatus,
+  LayoutState,
   NavLoadHistoryRequest,
   NavLoadVersionRequest,
   NavRestoreVersionRequest,
@@ -55,6 +56,12 @@ const cosEditorApi = {
 
   testConnection: (): Promise<ConnectionTestResult> =>
     ipcRenderer.invoke(IPC.SETTINGS_TEST_CONNECTION),
+
+  // Layout
+  getLayout: (): Promise<LayoutState> => ipcRenderer.invoke(IPC.LAYOUT_GET),
+
+  setLayout: (partial: Partial<LayoutState>): Promise<LayoutState> =>
+    ipcRenderer.invoke(IPC.LAYOUT_SET, partial),
 
   // Navigation
   listBooks: (): Promise<BookRecord[]> => ipcRenderer.invoke(IPC.NAV_LIST_BOOKS),

@@ -13,6 +13,10 @@ export const IPC = {
   SETTINGS_SET: 'settings:set',
   SETTINGS_TEST_CONNECTION: 'settings:test-connection',
 
+  // Layout (renderer -> main)
+  LAYOUT_GET: 'layout:get',
+  LAYOUT_SET: 'layout:set',
+
   // Navigation operations (renderer -> main)
   NAV_LIST_BOOKS: 'nav:list-books',
   NAV_LOAD_MANUSCRIPT: 'nav:load-manuscript',
@@ -119,4 +123,12 @@ export interface NavRestoreVersionRequest {
   slug: string
   targetHash: string
   expectedHead?: string | null
+}
+
+export interface LayoutState {
+  leftPaneOpen: boolean
+  captureOpen: boolean
+  activeTab: string
+  lastBookId: string | null
+  lastChapterPath: string | null
 }

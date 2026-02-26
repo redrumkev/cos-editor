@@ -7,7 +7,13 @@ import type {
   ManuscriptStructure,
   SectionType,
 } from '../../shared/cos-types'
-import type { BufferConflict, BufferMode, BufferState, CosStatus } from '../../shared/ipc'
+import type {
+  BufferConflict,
+  BufferMode,
+  BufferState,
+  CosStatus,
+  LayoutState,
+} from '../../shared/ipc'
 import { CapturePanel } from './components/CapturePanel'
 import { CommandPalette } from './components/CommandPalette'
 import { ConflictDialog } from './components/ConflictDialog'
@@ -41,11 +47,75 @@ function App(): React.JSX.Element {
   const [leftPaneOpen, setLeftPaneOpen] = useState(true)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
+  // Track whether layout has been restored to avoid saving defaults back
+  const layoutRestoredRef = useRef(false)
+
   useEffect(() => {
     window.cosEditor.onBufferState((state: BufferState) => setBufferState(state))
     window.cosEditor.onCosStatus((status: CosStatus) => setCosStatus(status))
     window.cosEditor.onBufferConflict((c: BufferConflict) => setConflict(c))
     window.cosEditor.onCaptureState((state: CaptureState) => setCaptureState(state))
+
+    // Restore layout state
+    window.cosEditor
+      .getLayout()
+      .then((saved: LayoutState) => {
+        setLeftPaneOpen(saved.leftPaneOpen)
+        setCaptureOpen(saved.captureOpen)
+        setActiveTab(saved.activeTab as TabId)
+
+        if (saved.lastBookId) {
+          // Load books and auto-select the saved one
+          window.cosEditor
+            .listBooks()
+            .then((books: BookRecord[]) => {
+              const book = books.find((b) => b.id === saved.lastBookId)
+              if (book) {
+                setSelectedBook(book)
+                window.cosEditor
+                  .loadManuscript(book.id)
+                  .then((ms) => {
+                    setManuscript(ms)
+
+                    // Re-open last chapter if saved
+                    if (saved.lastChapterPath) {
+                      const [section, slug] = saved.lastChapterPath.split('/') as [
+                        SectionType,
+                        string,
+                      ]
+                      if (section && slug) {
+                        window.cosEditor
+                          .openBuffer({ bookId: book.id, section, slug, mode: 'live' })
+                          .catch(console.error)
+                        window.cosEditor
+                          .loadHistory({ bookId: book.id, section, slug, mode: 'live' })
+                          .then(setHistoryEntries)
+                          .catch(console.error)
+                      }
+                    }
+
+                    layoutRestoredRef.current = true
+                  })
+                  .catch((err) => {
+                    console.error('[layout] Failed to restore manuscript:', err)
+                    layoutRestoredRef.current = true
+                  })
+              } else {
+                layoutRestoredRef.current = true
+              }
+            })
+            .catch((err) => {
+              console.error('[layout] Failed to list books for restore:', err)
+              layoutRestoredRef.current = true
+            })
+        } else {
+          layoutRestoredRef.current = true
+        }
+      })
+      .catch((err) => {
+        console.error('[layout] Failed to restore layout:', err)
+        layoutRestoredRef.current = true
+      })
   }, [])
 
   const handleEditorChange = useCallback((content: string) => {
@@ -229,6 +299,48 @@ function App(): React.JSX.Element {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [conflict, settingsOpen, commandPaletteOpen, viewingVersion, captureOpen])
+
+  // Debounced layout persistence
+  const layoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!layoutRestoredRef.current) return
+
+    if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
+    layoutTimerRef.current = setTimeout(() => {
+      const lastBookId = selectedBook?.id ?? null
+      const lastChapterPath = bufferState ? `${bufferState.section}/${bufferState.slug}` : null
+
+      window.cosEditor
+        .setLayout({
+          leftPaneOpen,
+          captureOpen,
+          activeTab,
+          lastBookId,
+          lastChapterPath,
+        })
+        .catch(console.error)
+    }, 1000)
+
+    return () => {
+      if (layoutTimerRef.current) {
+        clearTimeout(layoutTimerRef.current)
+        // Flush on unmount: save immediately
+        const lastBookId = selectedBook?.id ?? null
+        const lastChapterPath = bufferState ? `${bufferState.section}/${bufferState.slug}` : null
+
+        window.cosEditor
+          .setLayout({
+            leftPaneOpen,
+            captureOpen,
+            activeTab,
+            lastBookId,
+            lastChapterPath,
+          })
+          .catch(console.error)
+      }
+    }
+  }, [leftPaneOpen, captureOpen, activeTab, selectedBook, bufferState])
 
   const handleAcceptDraft = useCallback(() => {
     if (!bufferState) return

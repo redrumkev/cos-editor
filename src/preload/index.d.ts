@@ -20,6 +20,7 @@ import type {
   BufferState,
   ConnectionTestResult,
   CosStatus,
+  LayoutState,
   NavLoadHistoryRequest,
   NavLoadVersionRequest,
   NavRestoreVersionRequest,
@@ -39,6 +40,10 @@ interface CosEditorAPI {
   getSettings: () => Promise<Settings>
   setSettings: (partial: Partial<Settings>) => Promise<Settings>
   testConnection: () => Promise<ConnectionTestResult>
+
+  // Layout
+  getLayout: () => Promise<LayoutState>
+  setLayout: (partial: Partial<LayoutState>) => Promise<LayoutState>
 
   // Navigation
   listBooks: () => Promise<BookRecord[]>
