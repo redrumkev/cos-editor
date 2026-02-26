@@ -1,12 +1,26 @@
+import type { BookRecord } from '../../../shared/cos-types'
+import { BookSwitcher } from './BookSwitcher'
+
 interface TopBarProps {
   cosStatus: { connected: boolean }
   onSettingsClick: () => void
+  selectedBook: BookRecord | null
+  onSelectBook: (book: BookRecord) => void
 }
 
-export function TopBar({ cosStatus, onSettingsClick }: TopBarProps): React.JSX.Element {
+export function TopBar({
+  cosStatus,
+  onSettingsClick,
+  selectedBook,
+  onSelectBook,
+}: TopBarProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between px-4 h-10 bg-bg-surface border-b border-border shrink-0 select-none">
-      <div className="text-sm font-medium text-text-muted">COS Editor</div>
+      <BookSwitcher
+        selectedBook={selectedBook}
+        onSelectBook={onSelectBook}
+        connected={cosStatus.connected}
+      />
       <div className="flex items-center gap-3">
         {/* Connection indicator */}
         <div className="flex items-center gap-1.5">

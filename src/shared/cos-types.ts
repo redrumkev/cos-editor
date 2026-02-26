@@ -105,6 +105,12 @@ export interface AcceptDraftResponse {
   accepted_from_draft_hash: string
 }
 
+// Write result from save/revert operations
+export interface WriteResult {
+  response: VersionResponse
+  contentHash: string
+}
+
 // Book record from GET /books/{bookId}
 export interface BookRecord {
   id: string

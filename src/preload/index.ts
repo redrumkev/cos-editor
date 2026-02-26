@@ -1,11 +1,21 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
+  BookRecord,
+  CasHistoryEntry,
+  ChapterContent,
+  ManuscriptStructure,
+  WriteResult,
+} from '../shared/cos-types'
+import type {
   BufferApplyChangesRequest,
   BufferOpenRequest,
   BufferState,
   ConnectionTestResult,
   CosStatus,
+  NavLoadHistoryRequest,
+  NavLoadVersionRequest,
+  NavRestoreVersionRequest,
   Settings,
 } from '../shared/ipc'
 import { IPC } from '../shared/ipc'
@@ -29,6 +39,21 @@ const cosEditorApi = {
 
   testConnection: (): Promise<ConnectionTestResult> =>
     ipcRenderer.invoke(IPC.SETTINGS_TEST_CONNECTION),
+
+  // Navigation
+  listBooks: (): Promise<BookRecord[]> => ipcRenderer.invoke(IPC.NAV_LIST_BOOKS),
+
+  loadManuscript: (bookId: string): Promise<ManuscriptStructure> =>
+    ipcRenderer.invoke(IPC.NAV_LOAD_MANUSCRIPT, bookId),
+
+  loadHistory: (req: NavLoadHistoryRequest): Promise<CasHistoryEntry[]> =>
+    ipcRenderer.invoke(IPC.NAV_LOAD_HISTORY, req),
+
+  loadVersion: (req: NavLoadVersionRequest): Promise<ChapterContent> =>
+    ipcRenderer.invoke(IPC.NAV_LOAD_VERSION, req),
+
+  restoreVersion: (req: NavRestoreVersionRequest): Promise<WriteResult> =>
+    ipcRenderer.invoke(IPC.NAV_RESTORE_VERSION, req),
 
   // Event listeners
   onBufferState: (callback: (state: BufferState) => void): void => {

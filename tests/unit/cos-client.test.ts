@@ -331,6 +331,77 @@ describe('CosClient', () => {
     })
   })
 
+  describe('listBooks', () => {
+    it('constructs correct URL for book list', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse([{ id: 'book-1', title: 'Test Book' }]))
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.listBooks()
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/books',
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'X-Tenant-ID': 'default' }),
+        }),
+      )
+    })
+
+    it('returns array of books', async () => {
+      const books = [
+        { id: 'b1', title: 'Book 1' },
+        { id: 'b2', title: 'Book 2' },
+      ]
+      mockFetch.mockResolvedValueOnce(mockResponse(books))
+      const client = new CosClient('http://localhost:8000', 'default')
+      const result = await client.listBooks()
+      expect(result).toEqual(books)
+    })
+  })
+
+  describe('getChapterAtHash', () => {
+    it('constructs correct URL with hash', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            slug: 'ch-1',
+            title: 'Ch 1',
+            content_draft: '# Hello',
+            content_published: null,
+            word_count: 1,
+            metadata: {},
+          },
+          200,
+          { ETag: '"abc123"', 'X-Content-Hash': 'abc123' },
+        ),
+      )
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.getChapterAtHash('book-id', 'body', 'ch-1', 'abc123')
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/manuscripts/book-id/chapters/body/ch-1/at/abc123',
+        expect.anything(),
+      )
+    })
+
+    it('extracts content hash from headers', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            slug: 'ch-1',
+            title: 'Ch 1',
+            content_draft: '# Hello',
+            content_published: null,
+            word_count: 1,
+            metadata: {},
+          },
+          200,
+          { ETag: '"hash456"', 'X-Content-Hash': 'hash456' },
+        ),
+      )
+      const client = new CosClient('http://localhost:8000', 'default')
+      const result = await client.getChapterAtHash('book-id', 'body', 'ch-1', 'hash456')
+      expect(result.contentHash).toBe('hash456')
+      expect(result.chapter.slug).toBe('ch-1')
+    })
+  })
+
   describe('error handling', () => {
     it('throws NotFoundError on 404', async () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ detail: 'Not found' }, 404))
