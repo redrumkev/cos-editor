@@ -2,23 +2,33 @@ import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
+import type { BufferApplyChangesRequest, BufferOpenRequest, Settings } from '../shared/ipc'
+import { IPC } from '../shared/ipc'
+import { BufferManager } from './buffer'
+import { CosClient } from './cos-client'
+import { SettingsStore } from './settings'
+
+let mainWindow: BrowserWindow | null = null
+let cosClient: CosClient
+let buffer: BufferManager
+let settings: SettingsStore
 
 function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
+      contextIsolation: true,
     },
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -26,7 +36,7 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
+  // HMR for renderer based on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
@@ -35,40 +45,122 @@ function createWindow(): void {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+function sendToRenderer(channel: string, data: unknown): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, data)
+  }
+}
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+async function checkCosConnection(): Promise<void> {
+  const s = settings.get()
+  try {
+    const { ok, latencyMs } = await cosClient.healthCheck()
+    sendToRenderer(IPC.COS_STATUS, {
+      connected: ok,
+      apiUrl: s.cosApiUrl,
+      ...(ok ? {} : { error: `Health check failed (${latencyMs}ms)` }),
+    })
+  } catch (err) {
+    sendToRenderer(IPC.COS_STATUS, {
+      connected: false,
+      apiUrl: s.cosApiUrl,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+}
+
+function registerIpcHandlers(): void {
+  // Buffer operations
+  ipcMain.handle(IPC.BUFFER_OPEN, async (_event, req: BufferOpenRequest) => {
+    return buffer.open(req.bookId, req.section, req.slug)
+  })
+
+  ipcMain.handle(IPC.BUFFER_APPLY_CHANGES, (_event, req: BufferApplyChangesRequest) => {
+    return buffer.applyChanges(req.content)
+  })
+
+  ipcMain.handle(IPC.BUFFER_SAVE, async () => {
+    return buffer.save()
+  })
+
+  // Settings
+  ipcMain.handle(IPC.SETTINGS_GET, () => {
+    return settings.get()
+  })
+
+  ipcMain.handle(IPC.SETTINGS_SET, (_event, partial: Partial<Settings>) => {
+    const updated = settings.set(partial)
+    // Update cos-client config when settings change
+    cosClient.updateConfig(updated.cosApiUrl, updated.cosTenantId)
+    return updated
+  })
+
+  ipcMain.handle(IPC.SETTINGS_TEST_CONNECTION, async () => {
+    const start = performance.now()
+    try {
+      const { ok } = await cosClient.healthCheck()
+      const latencyMs = Math.round(performance.now() - start)
+      return {
+        success: ok,
+        message: ok ? `Connected (${latencyMs}ms)` : 'Health check failed',
+        latencyMs,
+      }
+    } catch (err) {
+      const latencyMs = Math.round(performance.now() - start)
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+        latencyMs,
+      }
+    }
+  })
+}
+
+// --- App lifecycle ---
+
+app.whenReady().then(() => {
+  electronApp.setAppUserModelId('com.cos-editor')
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // Initialize settings
+  settings = new SettingsStore()
+  const s = settings.get()
 
+  // Initialize COS client
+  cosClient = new CosClient(s.cosApiUrl, s.cosTenantId)
+
+  // Initialize buffer manager
+  buffer = new BufferManager(cosClient)
+
+  // Forward buffer state events to renderer
+  buffer.on('state', (state) => {
+    sendToRenderer(IPC.BUFFER_STATE, state)
+  })
+
+  // Register IPC handlers
+  registerIpcHandlers()
+
+  // Create the window
   createWindow()
 
+  // Check COS connection on startup
+  checkCosConnection()
+
   app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// macOS: keep app running when all windows closed
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+app.on('before-quit', () => {
+  buffer?.destroy()
+})

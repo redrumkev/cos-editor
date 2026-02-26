@@ -1,0 +1,7 @@
+# Core config — require review
+Makefile @redrumkev
+biome.json @redrumkev
+tsconfig*.json @redrumkev
+electron.vite.config.ts @redrumkev
+electron-builder.yml @redrumkev
+package.json @redrumkev
