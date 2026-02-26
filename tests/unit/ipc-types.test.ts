@@ -11,6 +11,11 @@ describe('IPC channels', () => {
     expect(IPC.SETTINGS_TEST_CONNECTION).toBe('settings:test-connection')
     expect(IPC.BUFFER_STATE).toBe('buffer:state')
     expect(IPC.COS_STATUS).toBe('cos:status')
+    expect(IPC.NAV_LIST_BOOKS).toBe('nav:list-books')
+    expect(IPC.NAV_LOAD_MANUSCRIPT).toBe('nav:load-manuscript')
+    expect(IPC.NAV_LOAD_HISTORY).toBe('nav:load-history')
+    expect(IPC.NAV_LOAD_VERSION).toBe('nav:load-version')
+    expect(IPC.NAV_RESTORE_VERSION).toBe('nav:restore-version')
   })
 
   it('channel values are unique', () => {

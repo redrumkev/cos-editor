@@ -11,6 +11,7 @@ interface BufferState {
 
 interface StatusBarProps {
   bufferState: BufferState | null
+  historyLength?: number
 }
 
 function formatTimestamp(iso: string | null): string {
@@ -35,7 +36,7 @@ function SaveStatus({ bufferState }: { bufferState: BufferState | null }): React
   )
 }
 
-export function StatusBar({ bufferState }: StatusBarProps): React.JSX.Element {
+export function StatusBar({ bufferState, historyLength }: StatusBarProps): React.JSX.Element {
   const chapterLabel = bufferState ? `${bufferState.section}/${bufferState.slug}` : '--'
   const wordCount = bufferState?.wordCount ?? 0
 
@@ -44,9 +45,18 @@ export function StatusBar({ bufferState }: StatusBarProps): React.JSX.Element {
       {/* Chapter name */}
       <div className="text-text-muted truncate max-w-[200px]">{chapterLabel}</div>
 
-      {/* Word count */}
-      <div className="text-text-subtle">
-        {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+      {/* Version info */}
+      <div className="flex items-center gap-3">
+        {historyLength != null && historyLength > 0 && (
+          <span className="text-text-subtle">
+            v{historyLength}
+            {bufferState?.headHash ? ` (${bufferState.headHash.slice(0, 7)})` : ''}
+          </span>
+        )}
+        {/* Word count */}
+        <span className="text-text-subtle">
+          {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
+        </span>
       </div>
 
       {/* Save status */}

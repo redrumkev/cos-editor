@@ -138,6 +138,10 @@ export class CosClient {
 
   // --- READ endpoints ---
 
+  async listBooks(): Promise<BookRecord[]> {
+    return this.json<BookRecord[]>('/books')
+  }
+
   async getManuscript(bookId: string): Promise<ManuscriptStructure> {
     return this.json<ManuscriptStructure>(`/manuscripts/${bookId}`)
   }
@@ -172,6 +176,28 @@ export class CosClient {
     const chapter = (await res.json()) as ChapterContent
 
     let contentHash = ''
+    const etag = res.headers.get('ETag')
+    if (etag) {
+      contentHash = etag.replace(/^"|"$/g, '')
+    }
+    const xContentHash = res.headers.get('X-Content-Hash')
+    if (xContentHash) {
+      contentHash = xContentHash
+    }
+
+    return { chapter, contentHash }
+  }
+
+  async getChapterAtHash(
+    bookId: string,
+    section: SectionType,
+    slug: string,
+    hash: string,
+  ): Promise<{ chapter: ChapterContent; contentHash: string }> {
+    const res = await this.request(`/manuscripts/${bookId}/chapters/${section}/${slug}/at/${hash}`)
+    const chapter = (await res.json()) as ChapterContent
+
+    let contentHash = hash
     const etag = res.headers.get('ETag')
     if (etag) {
       contentHash = etag.replace(/^"|"$/g, '')

@@ -2,7 +2,14 @@ import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
-import type { BufferApplyChangesRequest, BufferOpenRequest, Settings } from '../shared/ipc'
+import type {
+  BufferApplyChangesRequest,
+  BufferOpenRequest,
+  NavLoadHistoryRequest,
+  NavLoadVersionRequest,
+  NavRestoreVersionRequest,
+  Settings,
+} from '../shared/ipc'
 import { IPC } from '../shared/ipc'
 import { BufferManager } from './buffer'
 import { CosClient } from './cos-client'
@@ -116,6 +123,36 @@ function registerIpcHandlers(): void {
         latencyMs,
       }
     }
+  })
+
+  // Navigation operations
+  ipcMain.handle(IPC.NAV_LIST_BOOKS, async () => {
+    return cosClient.listBooks()
+  })
+
+  ipcMain.handle(IPC.NAV_LOAD_MANUSCRIPT, async (_event, bookId: string) => {
+    return cosClient.getManuscript(bookId)
+  })
+
+  ipcMain.handle(IPC.NAV_LOAD_HISTORY, async (_event, req: NavLoadHistoryRequest) => {
+    return cosClient.getChapterHistory(req.bookId, req.section, req.slug)
+  })
+
+  ipcMain.handle(IPC.NAV_LOAD_VERSION, async (_event, req: NavLoadVersionRequest) => {
+    const { chapter } = await cosClient.getChapterAtHash(
+      req.bookId,
+      req.section,
+      req.slug,
+      req.hash,
+    )
+    return chapter
+  })
+
+  ipcMain.handle(IPC.NAV_RESTORE_VERSION, async (_event, req: NavRestoreVersionRequest) => {
+    return cosClient.revertChapter(req.bookId, req.section, req.slug, {
+      target_hash: req.targetHash,
+      expected_head: req.expectedHead ?? undefined,
+    })
   })
 }
 

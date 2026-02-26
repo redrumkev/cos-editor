@@ -10,6 +10,13 @@ export const IPC = {
   SETTINGS_SET: 'settings:set',
   SETTINGS_TEST_CONNECTION: 'settings:test-connection',
 
+  // Navigation operations (renderer -> main)
+  NAV_LIST_BOOKS: 'nav:list-books',
+  NAV_LOAD_MANUSCRIPT: 'nav:load-manuscript',
+  NAV_LOAD_HISTORY: 'nav:load-history',
+  NAV_LOAD_VERSION: 'nav:load-version',
+  NAV_RESTORE_VERSION: 'nav:restore-version',
+
   // Events (main -> renderer)
   BUFFER_STATE: 'buffer:state',
   COS_STATUS: 'cos:status',
@@ -52,4 +59,25 @@ export type ConnectionTestResult = {
   success: boolean
   message: string
   latencyMs?: number
+}
+
+export interface NavLoadHistoryRequest {
+  bookId: string
+  section: 'front' | 'body' | 'back'
+  slug: string
+}
+
+export interface NavLoadVersionRequest {
+  bookId: string
+  section: 'front' | 'body' | 'back'
+  slug: string
+  hash: string
+}
+
+export interface NavRestoreVersionRequest {
+  bookId: string
+  section: 'front' | 'body' | 'back'
+  slug: string
+  targetHash: string
+  expectedHead?: string | null
 }
