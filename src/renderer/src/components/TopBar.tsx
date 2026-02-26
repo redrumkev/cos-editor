@@ -1,4 +1,5 @@
 import type { BookRecord } from '../../../shared/cos-types'
+import type { BufferMode } from '../../../shared/ipc'
 import { BookSwitcher } from './BookSwitcher'
 
 interface TopBarProps {
@@ -6,6 +7,10 @@ interface TopBarProps {
   onSettingsClick: () => void
   selectedBook: BookRecord | null
   onSelectBook: (book: BookRecord) => void
+  bufferMode: BufferMode
+  onBufferModeChange: (mode: BufferMode) => void
+  canAcceptDraft: boolean
+  onAcceptDraft: () => void
 }
 
 export function TopBar({
@@ -13,6 +18,10 @@ export function TopBar({
   onSettingsClick,
   selectedBook,
   onSelectBook,
+  bufferMode,
+  onBufferModeChange,
+  canAcceptDraft,
+  onAcceptDraft,
 }: TopBarProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between px-4 h-10 bg-bg-surface border-b border-border shrink-0 select-none">
@@ -22,6 +31,40 @@ export function TopBar({
         connected={cosStatus.connected}
       />
       <div className="flex items-center gap-3">
+        {/* Live / Draft toggle */}
+        <div className="flex items-center rounded border border-border overflow-hidden text-xs">
+          <button
+            type="button"
+            onClick={() => onBufferModeChange('live')}
+            className={`px-2.5 py-1 transition-colors ${
+              bufferMode === 'live'
+                ? 'bg-accent/20 text-accent font-medium'
+                : 'text-text-muted hover:bg-bg-overlay'
+            }`}
+          >
+            Live
+          </button>
+          <button
+            type="button"
+            onClick={() => onBufferModeChange('draft')}
+            className={`px-2.5 py-1 transition-colors ${
+              bufferMode === 'draft'
+                ? 'bg-accent/20 text-accent font-medium'
+                : 'text-text-muted hover:bg-bg-overlay'
+            }`}
+          >
+            Draft
+          </button>
+        </div>
+        {/* Accept Draft button */}
+        <button
+          type="button"
+          onClick={onAcceptDraft}
+          disabled={!canAcceptDraft}
+          className="px-2.5 py-1 text-xs rounded border border-border text-success hover:bg-success/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Accept Draft
+        </button>
         {/* Connection indicator */}
         <div className="flex items-center gap-1.5">
           <div

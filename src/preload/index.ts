@@ -8,7 +8,9 @@ import type {
   WriteResult,
 } from '../shared/cos-types'
 import type {
+  BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
+  BufferConflict,
   BufferOpenRequest,
   BufferState,
   ConnectionTestResult,
@@ -30,6 +32,13 @@ const cosEditorApi = {
     ipcRenderer.invoke(IPC.BUFFER_APPLY_CHANGES, req),
 
   saveNow: (): Promise<BufferState> => ipcRenderer.invoke(IPC.BUFFER_SAVE),
+
+  reloadBuffer: (): Promise<BufferState> => ipcRenderer.invoke(IPC.BUFFER_RELOAD),
+
+  forceSave: (): Promise<BufferState> => ipcRenderer.invoke(IPC.BUFFER_FORCE_SAVE),
+
+  acceptDraft: (req: BufferAcceptDraftRequest): Promise<BufferState> =>
+    ipcRenderer.invoke(IPC.BUFFER_ACCEPT_DRAFT, req),
 
   // Settings
   getSettings: (): Promise<Settings> => ipcRenderer.invoke(IPC.SETTINGS_GET),
@@ -62,6 +71,10 @@ const cosEditorApi = {
 
   onCosStatus: (callback: (status: CosStatus) => void): void => {
     ipcRenderer.on(IPC.COS_STATUS, (_event, status) => callback(status))
+  },
+
+  onBufferConflict: (callback: (conflict: BufferConflict) => void): void => {
+    ipcRenderer.on(IPC.BUFFER_CONFLICT, (_event, conflict) => callback(conflict))
   },
 }
 

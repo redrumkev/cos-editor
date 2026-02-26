@@ -3,7 +3,9 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import type {
+  BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
+  BufferConflict,
   BufferOpenRequest,
   NavLoadHistoryRequest,
   NavLoadVersionRequest,
@@ -82,7 +84,7 @@ async function checkCosConnection(): Promise<void> {
 function registerIpcHandlers(): void {
   // Buffer operations
   ipcMain.handle(IPC.BUFFER_OPEN, async (_event, req: BufferOpenRequest) => {
-    return buffer.open(req.bookId, req.section, req.slug)
+    return buffer.open(req.bookId, req.section, req.slug, req.mode ?? 'live')
   })
 
   ipcMain.handle(IPC.BUFFER_APPLY_CHANGES, (_event, req: BufferApplyChangesRequest) => {
@@ -91,6 +93,18 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC.BUFFER_SAVE, async () => {
     return buffer.save()
+  })
+
+  ipcMain.handle(IPC.BUFFER_RELOAD, async () => {
+    return buffer.reloadFromServer()
+  })
+
+  ipcMain.handle(IPC.BUFFER_FORCE_SAVE, async () => {
+    return buffer.forceSave()
+  })
+
+  ipcMain.handle(IPC.BUFFER_ACCEPT_DRAFT, async (_event, req: BufferAcceptDraftRequest) => {
+    return buffer.acceptDraft(req.actor ?? 'user')
   })
 
   // Settings
@@ -135,6 +149,9 @@ function registerIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC.NAV_LOAD_HISTORY, async (_event, req: NavLoadHistoryRequest) => {
+    if (req.mode === 'draft') {
+      return cosClient.getDraftChapterHistory(req.bookId, req.section, req.slug)
+    }
     return cosClient.getChapterHistory(req.bookId, req.section, req.slug)
   })
 
@@ -178,6 +195,11 @@ app.whenReady().then(() => {
   // Forward buffer state events to renderer
   buffer.on('state', (state) => {
     sendToRenderer(IPC.BUFFER_STATE, state)
+  })
+
+  // Forward buffer conflict events to renderer
+  buffer.on('conflict', (conflict: BufferConflict) => {
+    sendToRenderer(IPC.BUFFER_CONFLICT, conflict)
   })
 
   // Register IPC handlers

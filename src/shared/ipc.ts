@@ -4,6 +4,9 @@ export const IPC = {
   BUFFER_OPEN: 'buffer:open',
   BUFFER_SAVE: 'buffer:save',
   BUFFER_APPLY_CHANGES: 'buffer:apply-changes',
+  BUFFER_RELOAD: 'buffer:reload',
+  BUFFER_FORCE_SAVE: 'buffer:force-save',
+  BUFFER_ACCEPT_DRAFT: 'buffer:accept-draft',
 
   // Settings (renderer -> main)
   SETTINGS_GET: 'settings:get',
@@ -19,14 +22,19 @@ export const IPC = {
 
   // Events (main -> renderer)
   BUFFER_STATE: 'buffer:state',
+  BUFFER_CONFLICT: 'buffer:conflict',
   COS_STATUS: 'cos:status',
 } as const
+
+// Buffer mode
+export type BufferMode = 'live' | 'draft'
 
 // Payload types
 export interface BufferOpenRequest {
   bookId: string
   section: 'front' | 'body' | 'back'
   slug: string
+  mode?: BufferMode
 }
 
 export interface BufferApplyChangesRequest {
@@ -42,6 +50,8 @@ export interface BufferState {
   headHash: string | null
   lastSavedAt: string | null
   wordCount: number
+  mode: BufferMode
+  liveHeadHash: string | null
 }
 
 export interface CosStatus {
@@ -65,6 +75,17 @@ export interface NavLoadHistoryRequest {
   bookId: string
   section: 'front' | 'body' | 'back'
   slug: string
+  mode?: BufferMode
+}
+
+export interface BufferAcceptDraftRequest {
+  actor?: string
+}
+
+export interface BufferConflict {
+  operation: 'save' | 'accept'
+  mode: BufferMode
+  message: string
 }
 
 export interface NavLoadVersionRequest {

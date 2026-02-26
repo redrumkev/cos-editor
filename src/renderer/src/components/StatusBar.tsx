@@ -1,13 +1,4 @@
-interface BufferState {
-  bookId: string
-  section: string
-  slug: string
-  content: string
-  dirty: boolean
-  headHash: string | null
-  lastSavedAt: string | null
-  wordCount: number
-}
+import type { BufferState } from '../../../shared/ipc'
 
 interface StatusBarProps {
   bufferState: BufferState | null
@@ -37,7 +28,8 @@ function SaveStatus({ bufferState }: { bufferState: BufferState | null }): React
 }
 
 export function StatusBar({ bufferState, historyLength }: StatusBarProps): React.JSX.Element {
-  const chapterLabel = bufferState ? `${bufferState.section}/${bufferState.slug}` : '--'
+  const modeTag = bufferState ? (bufferState.mode === 'draft' ? ' (draft)' : ' (live)') : ''
+  const chapterLabel = bufferState ? `${bufferState.section}/${bufferState.slug}${modeTag}` : '--'
   const wordCount = bufferState?.wordCount ?? 0
 
   return (

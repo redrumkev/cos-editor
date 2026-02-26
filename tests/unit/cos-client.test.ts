@@ -402,6 +402,116 @@ describe('CosClient', () => {
     })
   })
 
+  describe('getDraftChapter', () => {
+    it('constructs correct URL with /drafts/chapters/ path', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            slug: 'ch-1',
+            title: 'Chapter 1',
+            content_draft: '# Draft content',
+            content_published: null,
+            word_count: 2,
+            metadata: {},
+          },
+          200,
+          { ETag: '"draft-hash"', 'X-Content-Hash': 'draft-hash' },
+        ),
+      )
+
+      const client = new CosClient('http://localhost:8000', 'default')
+      const result = await client.getDraftChapter('book-id', 'body', 'ch-1')
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1',
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'X-Tenant-ID': 'default' }),
+        }),
+      )
+      expect(result.contentHash).toBe('draft-hash')
+      expect(result.chapter.content_draft).toBe('# Draft content')
+    })
+  })
+
+  describe('saveDraftChapter', () => {
+    it('constructs correct URL and sends expected_head in body', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            content_hash: 'new-draft-hash',
+            word_count: 5,
+            created_at: '2026-01-01',
+            parent_hash: 'draft-hash',
+          },
+          200,
+          { ETag: '"new-draft-hash"', 'X-Content-Hash': 'new-draft-hash' },
+        ),
+      )
+
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.saveDraftChapter('book-id', 'body', 'ch-1', {
+        title: 'Chapter 1',
+        content_draft: '# Updated draft',
+        expected_head: 'draft-hash',
+      })
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1',
+        expect.objectContaining({ method: 'PUT' }),
+      )
+      const [, opts] = mockFetch.mock.calls[0]
+      const body = JSON.parse(opts.body)
+      expect(body.expected_head).toBe('draft-hash')
+    })
+  })
+
+  describe('acceptDraft', () => {
+    it('constructs correct URL and extracts hash from response', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse(
+          {
+            content_hash: 'accepted-hash',
+            word_count: 10,
+            accepted_from_draft_hash: 'draft-hash',
+          },
+          200,
+          { ETag: '"accepted-hash"', 'X-Content-Hash': 'accepted-hash' },
+        ),
+      )
+
+      const client = new CosClient('http://localhost:8000', 'default')
+      const result = await client.acceptDraft('book-id', 'body', 'ch-1', {
+        expected_draft_head: 'draft-hash',
+        expected_live_head: 'live-hash',
+        actor: 'user',
+      })
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1/accept',
+        expect.objectContaining({ method: 'POST' }),
+      )
+      expect(result.contentHash).toBe('accepted-hash')
+    })
+  })
+
+  describe('getDraftChapterHistory', () => {
+    it('constructs correct URL with /drafts/chapters/ path', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse([{ hash: 'h1', parent_hash: null, created_at: '2026-01-01', metadata: {} }]),
+      )
+
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.getDraftChapterHistory('book-id', 'body', 'ch-1')
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1/history',
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'X-Tenant-ID': 'default' }),
+        }),
+      )
+    })
+  })
+
   describe('error handling', () => {
     it('throws NotFoundError on 404', async () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ detail: 'Not found' }, 404))
