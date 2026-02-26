@@ -6,6 +6,8 @@ import type {
   ManuscriptStructure,
   SectionType,
 } from '../../shared/cos-types'
+import type { BufferConflict, BufferMode, BufferState, CosStatus } from '../../shared/ipc'
+import { ConflictDialog } from './components/ConflictDialog'
 import { ConnectionBanner } from './components/ConnectionBanner'
 import { LeftPane } from './components/LeftPane'
 import { SettingsPanel } from './components/SettingsPanel'
@@ -13,23 +15,6 @@ import { StatusBar } from './components/StatusBar'
 import { TopBar } from './components/TopBar'
 import { VersionViewer } from './components/VersionViewer'
 import { EditorMount } from './editor/EditorMount'
-
-interface BufferState {
-  bookId: string
-  section: string
-  slug: string
-  content: string
-  dirty: boolean
-  headHash: string | null
-  lastSavedAt: string | null
-  wordCount: number
-}
-
-interface CosStatus {
-  connected: boolean
-  apiUrl: string
-  error?: string
-}
 
 type TabId = 'structure' | 'outline' | 'changes'
 
@@ -46,10 +31,13 @@ function App(): React.JSX.Element {
     content: ChapterContent
     index: number
   } | null>(null)
+  const [bufferMode, setBufferMode] = useState<BufferMode>('live')
+  const [conflict, setConflict] = useState<BufferConflict | null>(null)
 
   useEffect(() => {
     window.cosEditor.onBufferState((state: BufferState) => setBufferState(state))
     window.cosEditor.onCosStatus((status: CosStatus) => setCosStatus(status))
+    window.cosEditor.onBufferConflict((c: BufferConflict) => setConflict(c))
   }, [])
 
   const handleEditorChange = useCallback((content: string) => {
@@ -68,19 +56,22 @@ function App(): React.JSX.Element {
       if (!selectedBook) return
       setViewingVersion(null)
 
-      window.cosEditor.openBuffer({ bookId: selectedBook.id, section, slug }).catch(console.error)
+      window.cosEditor
+        .openBuffer({ bookId: selectedBook.id, section, slug, mode: bufferMode })
+        .catch(console.error)
 
       window.cosEditor
-        .loadHistory({ bookId: selectedBook.id, section, slug })
+        .loadHistory({ bookId: selectedBook.id, section, slug, mode: bufferMode })
         .then(setHistoryEntries)
         .catch(console.error)
     },
-    [selectedBook],
+    [selectedBook, bufferMode],
   )
 
   const handleViewVersion = useCallback(
     (hash: string) => {
       if (!selectedBook || !bufferState) return
+      if (bufferMode !== 'live') return // Version viewing only in live mode
       const index = historyEntries.findIndex((e) => e.hash === hash)
       if (index === -1) return
 
@@ -96,7 +87,7 @@ function App(): React.JSX.Element {
         })
         .catch(console.error)
     },
-    [selectedBook, bufferState, historyEntries],
+    [selectedBook, bufferState, historyEntries, bufferMode],
   )
 
   const handleRestoreVersion = useCallback(
@@ -117,21 +108,94 @@ function App(): React.JSX.Element {
           setViewingVersion(null)
           // Re-open buffer and reload history
           window.cosEditor
-            .openBuffer({ bookId: selectedBook.id, section, slug })
+            .openBuffer({ bookId: selectedBook.id, section, slug, mode: bufferMode })
             .catch(console.error)
           window.cosEditor
-            .loadHistory({ bookId: selectedBook.id, section, slug })
+            .loadHistory({ bookId: selectedBook.id, section, slug, mode: bufferMode })
             .then(setHistoryEntries)
             .catch(console.error)
         })
         .catch(console.error)
     },
-    [selectedBook, bufferState],
+    [selectedBook, bufferState, bufferMode],
   )
 
   const handleCloseVersion = useCallback(() => {
     setViewingVersion(null)
   }, [])
+
+  const handleBufferModeChange = useCallback(
+    (mode: BufferMode) => {
+      if (mode === bufferMode) return
+      setBufferMode(mode)
+
+      // Re-open current buffer in new mode
+      if (selectedBook && bufferState) {
+        window.cosEditor
+          .openBuffer({
+            bookId: selectedBook.id,
+            section: bufferState.section as SectionType,
+            slug: bufferState.slug,
+            mode,
+          })
+          .catch(console.error)
+
+        window.cosEditor
+          .loadHistory({
+            bookId: selectedBook.id,
+            section: bufferState.section as SectionType,
+            slug: bufferState.slug,
+            mode,
+          })
+          .then(setHistoryEntries)
+          .catch(console.error)
+      }
+    },
+    [bufferMode, selectedBook, bufferState],
+  )
+
+  const handleAcceptDraft = useCallback(() => {
+    if (!bufferState) return
+
+    const doAccept = (): void => {
+      window.cosEditor
+        .acceptDraft({ actor: 'user' })
+        .then(() => {
+          setBufferMode('live')
+        })
+        .catch(console.error)
+    }
+
+    if (bufferState.dirty) {
+      // Save first, then accept
+      window.cosEditor
+        .saveNow()
+        .then(() => doAccept())
+        .catch(console.error)
+    } else {
+      doAccept()
+    }
+  }, [bufferState])
+
+  const handleConflictCancel = useCallback(() => {
+    setConflict(null)
+  }, [])
+
+  const handleConflictReload = useCallback(() => {
+    setConflict(null)
+    window.cosEditor.reloadBuffer().catch(console.error)
+  }, [])
+
+  const handleConflictOverwrite = useCallback(() => {
+    setConflict(null)
+    window.cosEditor.forceSave().catch(console.error)
+  }, [])
+
+  const canAcceptDraft =
+    bufferMode === 'draft' &&
+    bufferState !== null &&
+    !bufferState.dirty &&
+    bufferState.headHash !== null
 
   return (
     <div className="flex flex-col h-full">
@@ -140,6 +204,10 @@ function App(): React.JSX.Element {
         onSettingsClick={() => setSettingsOpen(true)}
         selectedBook={selectedBook}
         onSelectBook={handleSelectBook}
+        bufferMode={bufferMode}
+        onBufferModeChange={handleBufferModeChange}
+        canAcceptDraft={canAcceptDraft}
+        onAcceptDraft={handleAcceptDraft}
       />
       {!cosStatus.connected && (
         <ConnectionBanner apiUrl={cosStatus.apiUrl} error={cosStatus.error} />
@@ -169,6 +237,14 @@ function App(): React.JSX.Element {
       </div>
       <StatusBar bufferState={bufferState} historyLength={historyEntries.length} />
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {conflict && (
+        <ConflictDialog
+          conflict={conflict}
+          onCancel={handleConflictCancel}
+          onReload={handleConflictReload}
+          onOverwrite={handleConflictOverwrite}
+        />
+      )}
     </div>
   )
 }

@@ -7,7 +7,9 @@ import type {
   WriteResult,
 } from '../shared/cos-types'
 import type {
+  BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
+  BufferConflict,
   BufferOpenRequest,
   BufferState,
   ConnectionTestResult,
@@ -23,6 +25,9 @@ interface CosEditorAPI {
   openBuffer: (req: BufferOpenRequest) => Promise<BufferState>
   applyChanges: (req: BufferApplyChangesRequest) => Promise<BufferState>
   saveNow: () => Promise<BufferState>
+  reloadBuffer: () => Promise<BufferState>
+  forceSave: () => Promise<BufferState>
+  acceptDraft: (req: BufferAcceptDraftRequest) => Promise<BufferState>
 
   // Settings
   getSettings: () => Promise<Settings>
@@ -39,6 +44,7 @@ interface CosEditorAPI {
   // Event listeners
   onBufferState: (callback: (state: BufferState) => void) => void
   onCosStatus: (callback: (status: CosStatus) => void) => void
+  onBufferConflict: (callback: (conflict: BufferConflict) => void) => void
 }
 
 declare global {

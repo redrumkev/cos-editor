@@ -172,7 +172,7 @@ export class CosClient {
     section: SectionType,
     slug: string,
   ): Promise<{ chapter: ChapterContent; contentHash: string }> {
-    const res = await this.request(`/manuscripts/${bookId}/chapters/${section}/${slug}/draft`)
+    const res = await this.request(`/manuscripts/${bookId}/drafts/chapters/${section}/${slug}`)
     const chapter = (await res.json()) as ChapterContent
 
     let contentHash = ''
@@ -234,7 +234,7 @@ export class CosClient {
     slug: string,
     body: SaveChapterRequest,
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/chapters/${section}/${slug}/draft`, {
+    return this.writeRequest(`/manuscripts/${bookId}/drafts/chapters/${section}/${slug}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     })
@@ -283,7 +283,7 @@ export class CosClient {
     body: AcceptDraftRequest = {},
   ): Promise<{ response: AcceptDraftResponse; contentHash: string }> {
     const res = await this.request(
-      `/manuscripts/${bookId}/chapters/${section}/${slug}/draft/accept`,
+      `/manuscripts/${bookId}/drafts/chapters/${section}/${slug}/accept`,
       {
         method: 'POST',
         body: JSON.stringify(body),
@@ -340,7 +340,7 @@ export class CosClient {
     slug: string,
   ): Promise<CasHistoryEntry[]> {
     return this.json<CasHistoryEntry[]>(
-      `/manuscripts/${bookId}/chapters/${section}/${slug}/draft/history`,
+      `/manuscripts/${bookId}/drafts/chapters/${section}/${slug}/history`,
     )
   }
 
