@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import type {
   BookRecord,
+  CaptureState,
   CasHistoryEntry,
   ChapterContent,
   ManuscriptStructure,
   SectionType,
 } from '../../shared/cos-types'
 import type { BufferConflict, BufferMode, BufferState, CosStatus } from '../../shared/ipc'
+import { CapturePanel } from './components/CapturePanel'
 import { ConflictDialog } from './components/ConflictDialog'
 import { ConnectionBanner } from './components/ConnectionBanner'
 import { LeftPane } from './components/LeftPane'
@@ -33,11 +35,14 @@ function App(): React.JSX.Element {
   } | null>(null)
   const [bufferMode, setBufferMode] = useState<BufferMode>('live')
   const [conflict, setConflict] = useState<BufferConflict | null>(null)
+  const [captureOpen, setCaptureOpen] = useState(false)
+  const [captureState, setCaptureState] = useState<CaptureState>({ todos: [] })
 
   useEffect(() => {
     window.cosEditor.onBufferState((state: BufferState) => setBufferState(state))
     window.cosEditor.onCosStatus((status: CosStatus) => setCosStatus(status))
     window.cosEditor.onBufferConflict((c: BufferConflict) => setConflict(c))
+    window.cosEditor.onCaptureState((state: CaptureState) => setCaptureState(state))
   }, [])
 
   const handleEditorChange = useCallback((content: string) => {
@@ -191,6 +196,29 @@ function App(): React.JSX.Element {
     window.cosEditor.forceSave().catch(console.error)
   }, [])
 
+  const handleToggleCapture = useCallback(() => {
+    setCaptureOpen((prev) => !prev)
+  }, [])
+
+  const handleCreateCapture = useCallback(
+    (content: string) => {
+      if (!selectedBook || !bufferState) return
+      window.cosEditor
+        .createCaptureTodo({
+          content,
+          bookId: selectedBook.id,
+          section: bufferState.section,
+          slug: bufferState.slug,
+        })
+        .catch(console.error)
+    },
+    [selectedBook, bufferState],
+  )
+
+  const handleApplyResult = useCallback((resultContent: string) => {
+    window.cosEditor.applyChanges({ content: resultContent }).catch(console.error)
+  }, [])
+
   const canAcceptDraft =
     bufferMode === 'draft' &&
     bufferState !== null &&
@@ -208,6 +236,8 @@ function App(): React.JSX.Element {
         onBufferModeChange={handleBufferModeChange}
         canAcceptDraft={canAcceptDraft}
         onAcceptDraft={handleAcceptDraft}
+        captureOpen={captureOpen}
+        onToggleCapture={handleToggleCapture}
       />
       {!cosStatus.connected && (
         <ConnectionBanner apiUrl={cosStatus.apiUrl} error={cosStatus.error} />
@@ -226,6 +256,14 @@ function App(): React.JSX.Element {
         <div className="flex-1 min-w-0">
           <EditorMount content={bufferState?.content ?? ''} onChange={handleEditorChange} />
         </div>
+        {captureOpen && (
+          <CapturePanel
+            captureState={captureState}
+            onCreateCapture={handleCreateCapture}
+            onApplyResult={handleApplyResult}
+            onClose={() => setCaptureOpen(false)}
+          />
+        )}
         {viewingVersion && (
           <VersionViewer
             version={viewingVersion}
