@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   BookRecord,
   CaptureState,
@@ -9,6 +9,7 @@ import type {
 } from '../../shared/cos-types'
 import type { BufferConflict, BufferMode, BufferState, CosStatus } from '../../shared/ipc'
 import { CapturePanel } from './components/CapturePanel'
+import { CommandPalette } from './components/CommandPalette'
 import { ConflictDialog } from './components/ConflictDialog'
 import { ConnectionBanner } from './components/ConnectionBanner'
 import { LeftPane } from './components/LeftPane'
@@ -37,6 +38,8 @@ function App(): React.JSX.Element {
   const [conflict, setConflict] = useState<BufferConflict | null>(null)
   const [captureOpen, setCaptureOpen] = useState(false)
   const [captureState, setCaptureState] = useState<CaptureState>({ todos: [] })
+  const [leftPaneOpen, setLeftPaneOpen] = useState(true)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
   useEffect(() => {
     window.cosEditor.onBufferState((state: BufferState) => setBufferState(state))
@@ -159,6 +162,74 @@ function App(): React.JSX.Element {
     [bufferMode, selectedBook, bufferState],
   )
 
+  // Refs to avoid stale closures in the IPC callback
+  const bufferModeRef = useRef(bufferMode)
+  useEffect(() => {
+    bufferModeRef.current = bufferMode
+  }, [bufferMode])
+  const handleBufferModeChangeRef = useRef(handleBufferModeChange)
+  useEffect(() => {
+    handleBufferModeChangeRef.current = handleBufferModeChange
+  }, [handleBufferModeChange])
+
+  // Subscribe to app commands from native menu
+  useEffect(() => {
+    window.cosEditor.onAppCommand((cmd) => {
+      switch (cmd.type) {
+        case 'save':
+          window.cosEditor.saveNow()
+          break
+        case 'force-save':
+          window.cosEditor.forceSave()
+          break
+        case 'toggle-settings':
+          setSettingsOpen((v) => !v)
+          break
+        case 'toggle-left-pane':
+          setLeftPaneOpen((v) => !v)
+          break
+        case 'toggle-capture-pane':
+          setCaptureOpen((v) => !v)
+          break
+        case 'toggle-buffer-mode':
+          handleBufferModeChangeRef.current(bufferModeRef.current === 'live' ? 'draft' : 'live')
+          break
+        case 'open-command-palette':
+          setCommandPaletteOpen(true)
+          break
+      }
+    })
+  }, [])
+
+  // Global Escape handler
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      if (conflict) {
+        setConflict(null)
+        return
+      }
+      if (settingsOpen) {
+        setSettingsOpen(false)
+        return
+      }
+      if (commandPaletteOpen) {
+        setCommandPaletteOpen(false)
+        return
+      }
+      if (viewingVersion) {
+        setViewingVersion(null)
+        return
+      }
+      if (captureOpen) {
+        setCaptureOpen(false)
+        return
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [conflict, settingsOpen, commandPaletteOpen, viewingVersion, captureOpen])
+
   const handleAcceptDraft = useCallback(() => {
     if (!bufferState) return
 
@@ -243,16 +314,18 @@ function App(): React.JSX.Element {
         <ConnectionBanner apiUrl={cosStatus.apiUrl} error={cosStatus.error} />
       )}
       <div className="flex flex-1 min-h-0">
-        <LeftPane
-          manuscript={manuscript}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          bufferState={bufferState}
-          historyEntries={historyEntries}
-          onSelectChapter={handleSelectChapter}
-          onViewVersion={handleViewVersion}
-          activeVersionHash={viewingVersion?.hash ?? null}
-        />
+        {leftPaneOpen && (
+          <LeftPane
+            manuscript={manuscript}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            bufferState={bufferState}
+            historyEntries={historyEntries}
+            onSelectChapter={handleSelectChapter}
+            onViewVersion={handleViewVersion}
+            activeVersionHash={viewingVersion?.hash ?? null}
+          />
+        )}
         <div className="flex-1 min-w-0">
           <EditorMount content={bufferState?.content ?? ''} onChange={handleEditorChange} />
         </div>
@@ -283,6 +356,18 @@ function App(): React.JSX.Element {
           onOverwrite={handleConflictOverwrite}
         />
       )}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSave={() => window.cosEditor.saveNow()}
+        onForceSave={() => window.cosEditor.forceSave()}
+        onToggleMode={() => handleBufferModeChange(bufferMode === 'live' ? 'draft' : 'live')}
+        onToggleLeftPane={() => setLeftPaneOpen((v) => !v)}
+        onToggleCapturePane={() => setCaptureOpen((v) => !v)}
+        onOpenSettings={() => setSettingsOpen(true)}
+        canAcceptDraft={canAcceptDraft}
+        onAcceptDraft={handleAcceptDraft}
+      />
     </div>
   )
 }

@@ -14,6 +14,7 @@ import type {
   WriteResult,
 } from '../shared/cos-types'
 import type {
+  AppCommand,
   BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
   BufferConflict,
@@ -100,6 +101,10 @@ const cosEditorApi = {
 
   onCaptureState: (callback: (state: CaptureState) => void): void => {
     ipcRenderer.on(IPC.CAPTURE_STATE, (_event, state) => callback(state))
+  },
+
+  onAppCommand: (callback: (cmd: AppCommand) => void): void => {
+    ipcRenderer.on(IPC.APP_COMMAND, (_event, cmd) => callback(cmd))
   },
 }
 

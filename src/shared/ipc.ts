@@ -32,7 +32,17 @@ export const IPC = {
   BUFFER_CONFLICT: 'buffer:conflict',
   COS_STATUS: 'cos:status',
   CAPTURE_STATE: 'capture:state',
+  APP_COMMAND: 'app:command',
 } as const
+
+export type AppCommand =
+  | { type: 'save' }
+  | { type: 'force-save' }
+  | { type: 'toggle-settings' }
+  | { type: 'toggle-left-pane' }
+  | { type: 'toggle-capture-pane' }
+  | { type: 'toggle-buffer-mode' }
+  | { type: 'open-command-palette' }
 
 // Buffer mode
 export type BufferMode = 'live' | 'draft'

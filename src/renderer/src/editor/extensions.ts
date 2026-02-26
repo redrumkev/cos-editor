@@ -1,5 +1,5 @@
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
@@ -30,6 +30,13 @@ export function getExtensions(onChange: (update: ViewUpdate) => void) {
 
     // Syntax highlighting
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+
+    // Explicit undo/redo keymaps (guarantee macOS behavior)
+    keymap.of([
+      { key: 'Mod-z', run: undo },
+      { key: 'Mod-Shift-z', run: redo },
+      { key: 'Mod-y', run: redo },
+    ]),
 
     // Keymaps
     keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, ...closeBracketsKeymap]),

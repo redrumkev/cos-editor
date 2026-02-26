@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import type {
   CaptureCreateRequest,
@@ -8,6 +8,7 @@ import type {
   CaptureSnapshotRequest,
 } from '../shared/cos-types'
 import type {
+  AppCommand,
   BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
   BufferConflict,
@@ -37,7 +38,6 @@ function createWindow(): void {
     width: 1200,
     height: 800,
     show: false,
-    autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -62,6 +62,132 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+}
+
+function sendCommand(cmd: AppCommand): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(IPC.APP_COMMAND, cmd)
+  }
+}
+
+function buildAppMenu(): Electron.Menu {
+  const isMac = process.platform === 'darwin'
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    // App menu (macOS only)
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' as const },
+              { type: 'separator' as const },
+              {
+                label: 'Settings',
+                accelerator: 'Cmd+,' as const,
+                click: () => sendCommand({ type: 'toggle-settings' }),
+              },
+              { type: 'separator' as const },
+              { role: 'services' as const },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+              { role: 'quit' as const },
+            ] as Electron.MenuItemConstructorOptions[],
+          },
+        ]
+      : []),
+
+    // File
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Save',
+          accelerator: 'CmdOrCtrl+S',
+          click: () => {
+            try {
+              buffer?.save()
+            } catch {
+              // no-op
+            }
+          },
+        },
+        {
+          label: 'Force Save',
+          accelerator: 'CmdOrCtrl+Shift+S',
+          click: () => {
+            try {
+              buffer?.forceSave()
+            } catch {
+              // no-op
+            }
+          },
+        },
+        { type: 'separator' },
+        { role: isMac ? 'close' : 'quit' },
+      ],
+    },
+
+    // Edit
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+
+    // View
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Command Palette',
+          accelerator: 'CmdOrCtrl+K',
+          click: () => sendCommand({ type: 'open-command-palette' }),
+        },
+        { type: 'separator' },
+        {
+          label: 'Toggle Left Pane',
+          accelerator: 'CmdOrCtrl+B',
+          click: () => sendCommand({ type: 'toggle-left-pane' }),
+        },
+        {
+          label: 'Toggle Capture Panel',
+          accelerator: 'CmdOrCtrl+Shift+B',
+          click: () => sendCommand({ type: 'toggle-capture-pane' }),
+        },
+        { type: 'separator' },
+        {
+          label: 'Toggle Live/Draft',
+          accelerator: 'CmdOrCtrl+D',
+          click: () => sendCommand({ type: 'toggle-buffer-mode' }),
+        },
+        { type: 'separator' },
+        { role: 'reload' },
+        { role: 'toggleDevTools' },
+      ],
+    },
+
+    // Window
+    { role: 'windowMenu' },
+
+    // Help
+    {
+      label: 'Help',
+      submenu: [],
+    },
+  ]
+
+  return Menu.buildFromTemplate(template)
 }
 
 function sendToRenderer(channel: string, data: unknown): void {
@@ -243,6 +369,9 @@ app.whenReady().then(() => {
 
   // Create the window
   createWindow()
+
+  // Set native application menu
+  Menu.setApplicationMenu(buildAppMenu())
 
   // Check COS connection on startup and poll periodically
   checkCosConnection()

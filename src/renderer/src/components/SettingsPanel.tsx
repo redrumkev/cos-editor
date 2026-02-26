@@ -48,7 +48,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      role="dialog"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
       <div className="bg-bg-surface rounded-lg border border-border shadow-xl w-[420px] max-w-[90vw]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">

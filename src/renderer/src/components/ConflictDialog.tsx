@@ -17,7 +17,13 @@ export function ConflictDialog({
   const modeLabel = conflict.mode === 'draft' ? 'Draft' : 'Live'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      role="dialog"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onCancel()
+      }}
+    >
       <div className="bg-bg-surface border border-border rounded-lg shadow-lg w-[420px] p-5">
         <h2 className="text-base font-semibold text-text mb-2">{title}</h2>
         <p className="text-sm text-text-muted mb-1">

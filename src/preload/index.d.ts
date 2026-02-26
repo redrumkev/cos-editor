@@ -59,6 +59,7 @@ interface CosEditorAPI {
   onCosStatus: (callback: (status: CosStatus) => void) => void
   onBufferConflict: (callback: (conflict: BufferConflict) => void) => void
   onCaptureState: (callback: (state: CaptureState) => void) => void
+  onAppCommand: (callback: (cmd: import('../shared/ipc').AppCommand) => void) => void
 }
 
 declare global {
