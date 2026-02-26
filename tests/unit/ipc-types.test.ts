@@ -20,6 +20,12 @@ describe('IPC channels', () => {
     expect(IPC.NAV_LOAD_HISTORY).toBe('nav:load-history')
     expect(IPC.NAV_LOAD_VERSION).toBe('nav:load-version')
     expect(IPC.NAV_RESTORE_VERSION).toBe('nav:restore-version')
+    expect(IPC.CAPTURE_CREATE_TODO).toBe('capture:create-todo')
+    expect(IPC.CAPTURE_LIST_TODOS).toBe('capture:list-todos')
+    expect(IPC.CAPTURE_GET_SNAPSHOT).toBe('capture:get-snapshot')
+    expect(IPC.CAPTURE_START_POLLING).toBe('capture:start-polling')
+    expect(IPC.CAPTURE_STOP_POLLING).toBe('capture:stop-polling')
+    expect(IPC.CAPTURE_STATE).toBe('capture:state')
   })
 
   it('channel values are unique', () => {
