@@ -124,3 +124,61 @@ export interface BookRecord {
   updated_at: string
   published_at: string | null
 }
+
+// Capture types
+export interface CaptureItem {
+  id: string
+  content: string
+  status: string
+  priority: string
+  source_surface: string
+  source_context: Record<string, string>
+  tags: string[]
+  created_at: string
+}
+
+export interface CaptureTask {
+  id: string
+  todo_id: string
+  task_type: string
+  status: string
+  instructions: string
+  created_at: string
+  claimed_at?: string
+  completed_at?: string
+}
+
+export interface CaptureResult {
+  id: string
+  task_id: string
+  status: string
+  score?: number
+  result: { content: string; model?: string }
+  created_at: string
+}
+
+export interface CaptureSnapshot {
+  todo: CaptureItem
+  tasks: CaptureTask[]
+  results: CaptureResult[]
+}
+
+export interface CaptureCreateRequest {
+  content: string
+  bookId: string
+  section: string
+  slug: string
+}
+
+export interface CaptureListRequest {
+  active?: boolean
+}
+
+export interface CaptureSnapshotRequest {
+  todoId: string
+}
+
+export interface CaptureState {
+  todos: CaptureItem[]
+  activeSnapshot?: CaptureSnapshot
+}

@@ -2,6 +2,9 @@ import type {
   AcceptDraftRequest,
   AcceptDraftResponse,
   BookRecord,
+  CaptureCreateRequest,
+  CaptureItem,
+  CaptureSnapshot,
   CasHistoryEntry,
   ChapterContent,
   DeleteChapterRequest,
@@ -346,6 +349,43 @@ export class CosClient {
 
   async getSectionHistory(bookId: string, section: SectionType): Promise<CasHistoryEntry[]> {
     return this.json<CasHistoryEntry[]>(`/manuscripts/${bookId}/sections/${section}/history`)
+  }
+
+  // --- CAPTURE endpoints ---
+
+  async createCaptureTodo(body: CaptureCreateRequest): Promise<CaptureItem> {
+    const res = await this.request('/capture/todos', {
+      method: 'POST',
+      body: JSON.stringify({
+        content: body.content,
+        source_surface: 'book_editor',
+        source_context: {
+          book_id: body.bookId,
+          section: body.section,
+          slug: body.slug,
+        },
+      }),
+    })
+    return res.json() as Promise<CaptureItem>
+  }
+
+  async getCaptureTodo(todoId: string): Promise<CaptureItem> {
+    return this.json<CaptureItem>(`/capture/todos/${todoId}`)
+  }
+
+  async getCaptureTodoSnapshot(todoId: string): Promise<CaptureSnapshot> {
+    return this.json<CaptureSnapshot>(`/capture/todos/${todoId}/snapshot`)
+  }
+
+  async listCaptureTodos(params?: {
+    active?: boolean
+    sourceSurface?: string
+  }): Promise<CaptureItem[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.active) searchParams.set('active', 'true')
+    if (params?.sourceSurface) searchParams.set('source_surface', params.sourceSurface)
+    const query = searchParams.toString()
+    return this.json<CaptureItem[]>(`/capture/todos${query ? `?${query}` : ''}`)
   }
 
   // --- HEALTH ---

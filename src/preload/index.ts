@@ -2,6 +2,12 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
   BookRecord,
+  CaptureCreateRequest,
+  CaptureItem,
+  CaptureListRequest,
+  CaptureSnapshot,
+  CaptureSnapshotRequest,
+  CaptureState,
   CasHistoryEntry,
   ChapterContent,
   ManuscriptStructure,
@@ -64,6 +70,21 @@ const cosEditorApi = {
   restoreVersion: (req: NavRestoreVersionRequest): Promise<WriteResult> =>
     ipcRenderer.invoke(IPC.NAV_RESTORE_VERSION, req),
 
+  // Capture operations
+  createCaptureTodo: (req: CaptureCreateRequest): Promise<CaptureItem> =>
+    ipcRenderer.invoke(IPC.CAPTURE_CREATE_TODO, req),
+
+  listCaptureTodos: (req?: CaptureListRequest): Promise<CaptureItem[]> =>
+    ipcRenderer.invoke(IPC.CAPTURE_LIST_TODOS, req),
+
+  getCaptureTodoSnapshot: (req: CaptureSnapshotRequest): Promise<CaptureSnapshot> =>
+    ipcRenderer.invoke(IPC.CAPTURE_GET_SNAPSHOT, req),
+
+  startCapturePolling: (todoId: string): Promise<void> =>
+    ipcRenderer.invoke(IPC.CAPTURE_START_POLLING, todoId),
+
+  stopCapturePolling: (): Promise<void> => ipcRenderer.invoke(IPC.CAPTURE_STOP_POLLING),
+
   // Event listeners
   onBufferState: (callback: (state: BufferState) => void): void => {
     ipcRenderer.on(IPC.BUFFER_STATE, (_event, state) => callback(state))
@@ -75,6 +96,10 @@ const cosEditorApi = {
 
   onBufferConflict: (callback: (conflict: BufferConflict) => void): void => {
     ipcRenderer.on(IPC.BUFFER_CONFLICT, (_event, conflict) => callback(conflict))
+  },
+
+  onCaptureState: (callback: (state: CaptureState) => void): void => {
+    ipcRenderer.on(IPC.CAPTURE_STATE, (_event, state) => callback(state))
   },
 }
 

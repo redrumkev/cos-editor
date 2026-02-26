@@ -11,6 +11,8 @@ interface TopBarProps {
   onBufferModeChange: (mode: BufferMode) => void
   canAcceptDraft: boolean
   onAcceptDraft: () => void
+  captureOpen: boolean
+  onToggleCapture: () => void
 }
 
 export function TopBar({
@@ -22,6 +24,8 @@ export function TopBar({
   onBufferModeChange,
   canAcceptDraft,
   onAcceptDraft,
+  captureOpen,
+  onToggleCapture,
 }: TopBarProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between px-4 h-10 bg-bg-surface border-b border-border shrink-0 select-none">
@@ -64,6 +68,19 @@ export function TopBar({
           className="px-2.5 py-1 text-xs rounded border border-border text-success hover:bg-success/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Accept Draft
+        </button>
+        {/* Capture toggle */}
+        <button
+          type="button"
+          onClick={onToggleCapture}
+          className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+            captureOpen
+              ? 'bg-accent/20 text-accent border-accent/40 font-medium'
+              : 'border-border text-text-muted hover:bg-bg-overlay'
+          }`}
+          title="Toggle capture panel"
+        >
+          Capture
         </button>
         {/* Connection indicator */}
         <div className="flex items-center gap-1.5">

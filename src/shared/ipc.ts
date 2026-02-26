@@ -20,10 +20,18 @@ export const IPC = {
   NAV_LOAD_VERSION: 'nav:load-version',
   NAV_RESTORE_VERSION: 'nav:restore-version',
 
+  // Capture operations (renderer -> main)
+  CAPTURE_CREATE_TODO: 'capture:create-todo',
+  CAPTURE_LIST_TODOS: 'capture:list-todos',
+  CAPTURE_GET_SNAPSHOT: 'capture:get-snapshot',
+  CAPTURE_START_POLLING: 'capture:start-polling',
+  CAPTURE_STOP_POLLING: 'capture:stop-polling',
+
   // Events (main -> renderer)
   BUFFER_STATE: 'buffer:state',
   BUFFER_CONFLICT: 'buffer:conflict',
   COS_STATUS: 'cos:status',
+  CAPTURE_STATE: 'capture:state',
 } as const
 
 // Buffer mode

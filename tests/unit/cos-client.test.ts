@@ -512,6 +512,64 @@ describe('CosClient', () => {
     })
   })
 
+  describe('createCaptureTodo', () => {
+    it('sends POST to /capture/todos with correct body', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          id: 'todo-1',
+          content: 'Rewrite opening',
+          status: 'captured',
+          priority: 'next',
+          source_surface: 'book_editor',
+          source_context: { book_id: 'b1', section: 'body', slug: 'ch-1' },
+          tags: [],
+          created_at: '2026-01-01',
+        }),
+      )
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.createCaptureTodo({
+        content: 'Rewrite opening',
+        bookId: 'b1',
+        section: 'body',
+        slug: 'ch-1',
+      })
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/capture/todos',
+        expect.objectContaining({ method: 'POST' }),
+      )
+    })
+  })
+
+  describe('getCaptureTodoSnapshot', () => {
+    it('constructs correct URL', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          todo: { id: 'todo-1' },
+          tasks: [],
+          results: [],
+        }),
+      )
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.getCaptureTodoSnapshot('todo-1')
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/capture/todos/todo-1/snapshot',
+        expect.anything(),
+      )
+    })
+  })
+
+  describe('listCaptureTodos', () => {
+    it('sends active=true query param', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse([]))
+      const client = new CosClient('http://localhost:8000', 'default')
+      await client.listCaptureTodos({ active: true })
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8000/capture/todos?active=true',
+        expect.anything(),
+      )
+    })
+  })
+
   describe('error handling', () => {
     it('throws NotFoundError on 404', async () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ detail: 'Not found' }, 404))

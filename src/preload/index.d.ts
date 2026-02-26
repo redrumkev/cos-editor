@@ -1,6 +1,12 @@
 import type { ElectronAPI } from '@electron-toolkit/preload'
 import type {
   BookRecord,
+  CaptureCreateRequest,
+  CaptureItem,
+  CaptureListRequest,
+  CaptureSnapshot,
+  CaptureSnapshotRequest,
+  CaptureState,
   CasHistoryEntry,
   ChapterContent,
   ManuscriptStructure,
@@ -41,10 +47,18 @@ interface CosEditorAPI {
   loadVersion: (req: NavLoadVersionRequest) => Promise<ChapterContent>
   restoreVersion: (req: NavRestoreVersionRequest) => Promise<WriteResult>
 
+  // Capture operations
+  createCaptureTodo: (req: CaptureCreateRequest) => Promise<CaptureItem>
+  listCaptureTodos: (req?: CaptureListRequest) => Promise<CaptureItem[]>
+  getCaptureTodoSnapshot: (req: CaptureSnapshotRequest) => Promise<CaptureSnapshot>
+  startCapturePolling: (todoId: string) => Promise<void>
+  stopCapturePolling: () => Promise<void>
+
   // Event listeners
   onBufferState: (callback: (state: BufferState) => void) => void
   onCosStatus: (callback: (status: CosStatus) => void) => void
   onBufferConflict: (callback: (conflict: BufferConflict) => void) => void
+  onCaptureState: (callback: (state: CaptureState) => void) => void
 }
 
 declare global {

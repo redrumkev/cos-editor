@@ -3,6 +3,11 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import type {
+  CaptureCreateRequest,
+  CaptureListRequest,
+  CaptureSnapshotRequest,
+} from '../shared/cos-types'
+import type {
   BufferAcceptDraftRequest,
   BufferApplyChangesRequest,
   BufferConflict,
@@ -14,6 +19,7 @@ import type {
 } from '../shared/ipc'
 import { IPC } from '../shared/ipc'
 import { BufferManager } from './buffer'
+import { CaptureManager } from './capture-manager'
 import { CosClient } from './cos-client'
 import { SettingsStore } from './settings'
 
@@ -22,6 +28,7 @@ const HEALTH_CHECK_INTERVAL_MS = 10_000
 let mainWindow: BrowserWindow | null = null
 let cosClient: CosClient
 let buffer: BufferManager
+let captureManager: CaptureManager
 let settings: SettingsStore
 let healthCheckTimer: ReturnType<typeof setInterval> | null = null
 
@@ -171,6 +178,27 @@ function registerIpcHandlers(): void {
       expected_head: req.expectedHead ?? undefined,
     })
   })
+
+  // Capture operations
+  ipcMain.handle(IPC.CAPTURE_CREATE_TODO, async (_event, req: CaptureCreateRequest) => {
+    return captureManager.createTodo(req)
+  })
+
+  ipcMain.handle(IPC.CAPTURE_LIST_TODOS, async (_event, _req?: CaptureListRequest) => {
+    return captureManager.listTodos()
+  })
+
+  ipcMain.handle(IPC.CAPTURE_GET_SNAPSHOT, async (_event, req: CaptureSnapshotRequest) => {
+    return cosClient.getCaptureTodoSnapshot(req.todoId)
+  })
+
+  ipcMain.handle(IPC.CAPTURE_START_POLLING, async (_event, todoId: string) => {
+    captureManager.startPolling(todoId)
+  })
+
+  ipcMain.handle(IPC.CAPTURE_STOP_POLLING, async () => {
+    captureManager.stopPolling()
+  })
 }
 
 // --- App lifecycle ---
@@ -202,6 +230,14 @@ app.whenReady().then(() => {
     sendToRenderer(IPC.BUFFER_CONFLICT, conflict)
   })
 
+  // Initialize capture manager
+  captureManager = new CaptureManager(cosClient)
+
+  // Forward capture state events to renderer
+  captureManager.on('state', (state) => {
+    sendToRenderer(IPC.CAPTURE_STATE, state)
+  })
+
   // Register IPC handlers
   registerIpcHandlers()
 
@@ -227,4 +263,5 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   if (healthCheckTimer) clearInterval(healthCheckTimer)
   buffer?.destroy()
+  captureManager?.destroy()
 })
