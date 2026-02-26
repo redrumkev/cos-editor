@@ -33,8 +33,3 @@ body {
   display: flex;
   flex-direction: column;
 }
-
-#editor-root {
-  flex: 1;
-  overflow: hidden;
-}

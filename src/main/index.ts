@@ -8,10 +8,13 @@ import { BufferManager } from './buffer'
 import { CosClient } from './cos-client'
 import { SettingsStore } from './settings'
 
+const HEALTH_CHECK_INTERVAL_MS = 10_000
+
 let mainWindow: BrowserWindow | null = null
 let cosClient: CosClient
 let buffer: BufferManager
 let settings: SettingsStore
+let healthCheckTimer: ReturnType<typeof setInterval> | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -146,8 +149,9 @@ app.whenReady().then(() => {
   // Create the window
   createWindow()
 
-  // Check COS connection on startup
+  // Check COS connection on startup and poll periodically
   checkCosConnection()
+  healthCheckTimer = setInterval(checkCosConnection, HEALTH_CHECK_INTERVAL_MS)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -162,5 +166,6 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  if (healthCheckTimer) clearInterval(healthCheckTimer)
   buffer?.destroy()
 })

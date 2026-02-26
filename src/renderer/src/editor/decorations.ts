@@ -29,12 +29,16 @@ const blockquoteMark = Decoration.line({ class: 'cm-md-blockquote' })
 
 function buildDecorations(view: EditorView): DecorationSet {
   const decos: Range<Decoration>[] = []
+  const docLen = view.state.doc.length
 
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(view.state).iterate({
       from,
       to,
       enter(node) {
+        // Guard: syntax tree positions can be stale during rapid input (speech-to-text, IME)
+        if (node.from > docLen || node.to > docLen) return
+
         // ATX Headings — apply line decoration and dim the markers
         if (
           node.name === 'ATXHeading1' ||
