@@ -27,6 +27,9 @@ export function TopBar({
   captureOpen,
   onToggleCapture,
 }: TopBarProps): React.JSX.Element {
+  const buttonBaseClass =
+    'px-2.5 py-1 text-xs rounded-md border shadow-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+
   return (
     <div className="flex items-center justify-between px-4 h-10 bg-bg-surface border-b border-border shrink-0 select-none">
       <BookSwitcher
@@ -36,13 +39,19 @@ export function TopBar({
       />
       <div className="flex items-center gap-3">
         {/* Live / Draft toggle */}
-        <div className="flex items-center overflow-hidden rounded-md border border-border bg-bg shadow-sm text-xs">
+        <div className="relative flex items-center overflow-hidden rounded-md border border-border bg-bg shadow-sm text-xs">
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none absolute inset-y-0 left-0 m-0.5 w-[calc(50%-2px)] rounded-[5px] bg-accent/20 transition-transform duration-[--duration-normal] [transition-timing-function:var(--ease-default)] ${
+              bufferMode === 'draft' ? 'translate-x-full' : ''
+            }`}
+          />
           <button
             type="button"
             onClick={() => onBufferModeChange('live')}
-            className={`px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+            className={`relative z-10 px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               bufferMode === 'live'
-                ? 'bg-accent/20 text-accent font-medium'
+                ? 'text-accent font-medium'
                 : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >
@@ -51,9 +60,9 @@ export function TopBar({
           <button
             type="button"
             onClick={() => onBufferModeChange('draft')}
-            className={`px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+            className={`relative z-10 px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               bufferMode === 'draft'
-                ? 'bg-accent/20 text-accent font-medium'
+                ? 'text-accent font-medium'
                 : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >
@@ -65,7 +74,7 @@ export function TopBar({
           type="button"
           onClick={onAcceptDraft}
           disabled={!canAcceptDraft}
-          className="px-2.5 py-1 text-xs rounded-md border border-border shadow-sm text-success hover:bg-success/10 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`${buttonBaseClass} border-border text-success hover:bg-success/10 disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           Accept Draft
         </button>
@@ -73,7 +82,7 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleCapture}
-          className={`px-2.5 py-1 text-xs rounded-md border shadow-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+          className={`${buttonBaseClass} ${
             captureOpen
               ? 'bg-accent/20 text-accent border-accent/40 font-medium'
               : 'border-border text-text-muted hover:bg-bg-overlay hover:text-text'
@@ -85,9 +94,11 @@ export function TopBar({
         {/* Connection indicator */}
         <div className="flex items-center gap-1.5">
           <div
-            className={`w-2 h-2 rounded-full ${cosStatus.connected ? 'bg-success' : 'bg-error'}`}
+            className={`h-2 w-2 rounded-full transition-colors duration-[--duration-normal] ${
+              cosStatus.connected ? 'bg-success' : 'bg-error animate-pulse'
+            }`}
           />
-          <span className="text-xs text-text-subtle">
+          <span className="text-xs text-text-subtle transition-colors duration-[--duration-normal]">
             {cosStatus.connected ? 'Connected' : 'Disconnected'}
           </span>
         </div>

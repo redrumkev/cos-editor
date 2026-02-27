@@ -39,7 +39,7 @@ export function ChangesView({
   }
 
   return (
-    <div className="py-1 overflow-y-auto flex-1">
+    <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
       {entries.map((entry, index) => {
         const versionLabel = `v${entries.length - index}`
         const shortHash = entry.hash.slice(0, 7)
@@ -50,9 +50,9 @@ export function ChangesView({
             key={entry.hash}
             type="button"
             onClick={() => onViewVersion(entry.hash)}
-            className={`w-full text-left px-3 py-2 transition-colors ${
+            className={`w-full text-left px-3 py-2 transition-colors duration-[--duration-normal] ${
               isActive
-                ? 'bg-bg-overlay text-accent'
+                ? 'bg-bg-hover text-accent'
                 : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >

@@ -33,8 +33,11 @@ export function CommandPalette({
   canAcceptDraft,
   onAcceptDraft,
 }: CommandPaletteProps): React.JSX.Element | null {
+  const closeAnimationMs = 250
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [isMounted, setIsMounted] = useState(open)
+  const [isVisible, setIsVisible] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -88,10 +91,20 @@ export function CommandPalette({
 
   useEffect(() => {
     if (open) {
+      setIsMounted(true)
       setQuery('')
       setSelectedIndex(0)
-      requestAnimationFrame(() => inputRef.current?.focus())
+      requestAnimationFrame(() => {
+        setIsVisible(true)
+        inputRef.current?.focus()
+      })
+      return
     }
+    setIsVisible(false)
+    const timeoutId = window.setTimeout(() => {
+      setIsMounted(false)
+    }, closeAnimationMs)
+    return () => window.clearTimeout(timeoutId)
   }, [open])
 
   useEffect(() => {
@@ -122,7 +135,7 @@ export function CommandPalette({
     return () => panel.removeEventListener('keydown', handleKeyDown)
   }, [open])
 
-  if (!open) return null
+  if (!isMounted) return null
 
   function execute(cmd: Command) {
     onClose()
@@ -147,7 +160,7 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-bg/70 px-4 pb-4 pt-[20vh] backdrop-blur-sm"
+      className={`fixed inset-0 z-50 flex items-start justify-center bg-bg/70 px-4 pb-4 pt-[20vh] backdrop-blur-sm transition-opacity duration-[--duration-slow] [transition-timing-function:var(--ease-out)] ${isVisible ? 'opacity-100' : 'opacity-0'}`}
       role="dialog"
       aria-modal="true"
       onMouseDown={(e) => {
@@ -156,7 +169,7 @@ export function CommandPalette({
     >
       <div
         ref={panelRef}
-        className="flex max-h-[60vh] w-[480px] flex-col overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl"
+        className={`flex max-h-[60vh] w-[480px] flex-col overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl transition-[opacity,transform] duration-[--duration-slow] [transition-timing-function:var(--ease-out)] ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
       >
         <div className="p-3 border-b border-border">
           <input
@@ -172,14 +185,14 @@ export function CommandPalette({
             className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-text placeholder-text-subtle transition-colors duration-[--duration-normal] focus:outline-none focus-visible:border-border focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           />
         </div>
-        <div className="overflow-y-auto p-2">
+        <div className="overflow-y-auto p-2 scrollbar-thin">
           {filtered.map((cmd, i) => (
             <div
               key={cmd.id}
               className={`cursor-pointer ${optionBaseClass} ${
                 i === selectedIndex
                   ? 'bg-accent/20 text-text'
-                  : 'text-text-muted hover:bg-bg-overlay'
+                  : 'text-text-muted hover:bg-bg-overlay hover:text-text'
               }`}
               onMouseEnter={() => setSelectedIndex(i)}
               onClick={() => execute(cmd)}

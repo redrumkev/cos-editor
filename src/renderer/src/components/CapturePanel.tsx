@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import type { CaptureResult, CaptureState } from '../../../shared/cos-types'
 
 interface CapturePanelProps {
+  width: number
   captureState: CaptureState
   onCreateCapture: (content: string) => void
   onApplyResult: (resultContent: string) => void
@@ -9,6 +10,7 @@ interface CapturePanelProps {
 }
 
 export function CapturePanel({
+  width,
   captureState,
   onCreateCapture,
   onApplyResult,
@@ -49,7 +51,7 @@ export function CapturePanel({
     'w-full rounded-md bg-accent py-1.5 text-sm font-medium text-bg transition-colors duration-[--duration-normal] hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
 
   return (
-    <div className="w-80 border-l border-border flex flex-col bg-bg-surface shrink-0">
+    <div className="border-l border-border flex flex-col bg-bg-surface shrink-0" style={{ width }}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <span className="text-xs font-medium text-text-subtle uppercase tracking-wider">
@@ -105,7 +107,7 @@ export function CapturePanel({
       </div>
 
       {/* Content area */}
-      <div className="flex-1 overflow-auto p-3">
+      <div className="flex-1 overflow-auto p-3 scrollbar-thin">
         {!snapshot && !isPolling && (
           <p className="text-xs text-text-subtle text-center mt-8">
             Ask the agent to help with your writing.
@@ -115,7 +117,7 @@ export function CapturePanel({
         {todo && (
           <div className="space-y-3">
             {/* Todo card */}
-            <div className="bg-bg-overlay rounded-md p-3 border border-border shadow-sm">
+            <div className="bg-bg-overlay rounded-md p-3 border border-border shadow-sm transition-colors duration-[--duration-normal] hover:bg-bg-hover">
               <p className="text-sm text-text mb-2">{todo.content}</p>
               <div className="flex items-center gap-2">
                 <span
@@ -139,7 +141,10 @@ export function CapturePanel({
 
             {/* Results */}
             {results.map((result: CaptureResult) => (
-              <div key={result.id} className="bg-bg-overlay rounded-md p-3 border border-accent/30">
+              <div
+                key={result.id}
+                className="bg-bg-overlay rounded-md p-3 border border-accent/30 transition-colors duration-[--duration-normal] hover:bg-bg-hover"
+              >
                 <p className="text-sm text-text whitespace-pre-wrap mb-3">
                   {result.result.content}
                 </p>

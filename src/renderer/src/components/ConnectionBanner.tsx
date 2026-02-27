@@ -5,13 +5,16 @@ interface ConnectionBannerProps {
 
 export function ConnectionBanner({ apiUrl, error }: ConnectionBannerProps): React.JSX.Element {
   const isError = Boolean(error)
+  const isReconnecting = !isError
   const bannerClass = isError
     ? 'bg-error/20 border-error/40 text-error'
     : 'bg-warning/20 border-warning/40 text-warning'
-  const iconClass = isError ? 'text-error' : 'text-warning'
+  const iconClass = isError ? 'text-error' : 'text-warning animate-pulse'
 
   return (
-    <div className={`flex items-center gap-2.5 px-4 py-2 border-b text-sm shrink-0 ${bannerClass}`}>
+    <div
+      className={`flex items-center gap-2.5 px-4 py-2 border-b text-sm shrink-0 transition-colors duration-[--duration-normal] ${bannerClass}`}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -27,10 +30,14 @@ export function ConnectionBanner({ apiUrl, error }: ConnectionBannerProps): Reac
           clipRule="evenodd"
         />
       </svg>
-      <span>
+      <span className="min-w-0 flex-1 truncate transition-colors duration-[--duration-normal]">
         COS disconnected{apiUrl ? ` — cannot reach ${apiUrl}` : ''}
         {error ? `: ${error}` : ''}
       </span>
+      <span
+        className={`h-2 w-2 rounded-full ${isReconnecting ? 'bg-warning animate-pulse' : 'bg-error'}`}
+        aria-hidden="true"
+      />
     </div>
   )
 }

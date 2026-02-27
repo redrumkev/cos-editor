@@ -45,13 +45,25 @@ function App(): React.JSX.Element {
   const [captureOpen, setCaptureOpen] = useState(false)
   const [captureState, setCaptureState] = useState<CaptureState>({ todos: [] })
   const [leftPaneOpen, setLeftPaneOpen] = useState(true)
+  const [leftPaneWidth, setLeftPaneWidth] = useState(240)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [captureWidth, setCaptureWidth] = useState(320)
+  const [chapterLoading, setChapterLoading] = useState(true)
+  const [isResizing, setIsResizing] = useState(false)
+  const resizeStateRef = useRef<{
+    panel: 'left' | 'capture'
+    startX: number
+    startWidth: number
+  } | null>(null)
 
   // Track whether layout has been restored to avoid saving defaults back
   const layoutRestoredRef = useRef(false)
 
   useEffect(() => {
-    window.cosEditor.onBufferState((state: BufferState) => setBufferState(state))
+    window.cosEditor.onBufferState((state: BufferState) => {
+      setBufferState(state)
+      setChapterLoading(false)
+    })
     window.cosEditor.onCosStatus((status: CosStatus) => setCosStatus(status))
     window.cosEditor.onBufferConflict((c: BufferConflict) => setConflict(c))
     window.cosEditor.onCaptureState((state: CaptureState) => setCaptureState(state))
@@ -126,6 +138,7 @@ function App(): React.JSX.Element {
     setSelectedBook(book)
     setHistoryEntries([])
     setViewingVersion(null)
+    setChapterLoading(true)
     window.cosEditor.loadManuscript(book.id).then(setManuscript).catch(console.error)
   }, [])
 
@@ -133,6 +146,7 @@ function App(): React.JSX.Element {
     (section: SectionType, slug: string) => {
       if (!selectedBook) return
       setViewingVersion(null)
+      setChapterLoading(true)
 
       window.cosEditor
         .openBuffer({ bookId: selectedBook.id, section, slug, mode: bufferMode })
@@ -206,6 +220,7 @@ function App(): React.JSX.Element {
     (mode: BufferMode) => {
       if (mode === bufferMode) return
       setBufferMode(mode)
+      setChapterLoading(true)
 
       // Re-open current buffer in new mode
       if (selectedBook && bufferState) {
@@ -383,6 +398,74 @@ function App(): React.JSX.Element {
     setCaptureOpen((prev) => !prev)
   }, [])
 
+  const handleLeftResizeStart = useCallback(
+    (event: React.MouseEvent) => {
+      if (!leftPaneOpen) return
+      resizeStateRef.current = {
+        panel: 'left',
+        startX: event.clientX,
+        startWidth: leftPaneWidth,
+      }
+      setIsResizing(true)
+    },
+    [leftPaneOpen, leftPaneWidth],
+  )
+
+  const handleCaptureResizeStart = useCallback(
+    (event: React.MouseEvent) => {
+      if (!captureOpen) return
+      resizeStateRef.current = {
+        panel: 'capture',
+        startX: event.clientX,
+        startWidth: captureWidth,
+      }
+      setIsResizing(true)
+    },
+    [captureOpen, captureWidth],
+  )
+
+  useEffect(() => {
+    function onMouseMove(event: MouseEvent) {
+      const resize = resizeStateRef.current
+      if (!resize) return
+
+      if (resize.panel === 'left') {
+        const nextWidth = Math.max(
+          180,
+          Math.min(400, resize.startWidth + (event.clientX - resize.startX)),
+        )
+        setLeftPaneWidth(nextWidth)
+        return
+      }
+
+      const nextWidth = Math.max(
+        240,
+        Math.min(480, resize.startWidth - (event.clientX - resize.startX)),
+      )
+      setCaptureWidth(nextWidth)
+    }
+
+    function stopResize() {
+      resizeStateRef.current = null
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      document.documentElement.style.cursor = 'col-resize'
+      document.documentElement.style.userSelect = 'none'
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', stopResize)
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', stopResize)
+      document.documentElement.style.cursor = ''
+      document.documentElement.style.userSelect = ''
+    }
+  }, [isResizing])
+
   const handleCreateCapture = useCallback(
     (content: string) => {
       if (!selectedBook || !bufferState) return
@@ -426,29 +509,67 @@ function App(): React.JSX.Element {
         <ConnectionBanner apiUrl={cosStatus.apiUrl} error={cosStatus.error} />
       )}
       <div className="flex flex-1 min-h-0">
-        {leftPaneOpen && (
-          <LeftPane
-            manuscript={manuscript}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            bufferState={bufferState}
-            historyEntries={historyEntries}
-            onSelectChapter={handleSelectChapter}
-            onViewVersion={handleViewVersion}
-            activeVersionHash={viewingVersion?.hash ?? null}
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <EditorMount content={bufferState?.content ?? ''} onChange={handleEditorChange} />
+        <div
+          className="overflow-hidden shrink-0"
+          style={{
+            width: leftPaneOpen ? leftPaneWidth + 4 : 0,
+            transition: 'width var(--duration-slow) var(--ease-out)',
+          }}
+        >
+          <div className="flex h-full" style={{ width: leftPaneWidth + 4 }}>
+            <LeftPane
+              width={leftPaneWidth}
+              manuscript={manuscript}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              bufferState={bufferState}
+              historyEntries={historyEntries}
+              onSelectChapter={handleSelectChapter}
+              onViewVersion={handleViewVersion}
+              activeVersionHash={viewingVersion?.hash ?? null}
+            />
+            <button
+              type="button"
+              aria-label="Resize left pane"
+              onMouseDown={handleLeftResizeStart}
+              className="group relative h-full w-1 shrink-0 cursor-col-resize bg-transparent transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:bg-bg-hover"
+            >
+              <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border/40 transition-colors duration-[--duration-normal] group-hover:bg-accent/70 group-focus-visible:bg-accent/70" />
+            </button>
+          </div>
         </div>
-        {captureOpen && (
-          <CapturePanel
-            captureState={captureState}
-            onCreateCapture={handleCreateCapture}
-            onApplyResult={handleApplyResult}
-            onClose={() => setCaptureOpen(false)}
+        <div className="flex-1 min-w-0">
+          <EditorMount
+            loading={chapterLoading || !bufferState}
+            content={bufferState?.content ?? ''}
+            onChange={handleEditorChange}
           />
-        )}
+        </div>
+        <div
+          className="overflow-hidden shrink-0"
+          style={{
+            width: captureOpen ? captureWidth + 4 : 0,
+            transition: 'width var(--duration-slow) var(--ease-out)',
+          }}
+        >
+          <div className="flex h-full" style={{ width: captureWidth + 4 }}>
+            <button
+              type="button"
+              aria-label="Resize capture panel"
+              onMouseDown={handleCaptureResizeStart}
+              className="group relative h-full w-1 shrink-0 cursor-col-resize bg-transparent transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:bg-bg-hover"
+            >
+              <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border/40 transition-colors duration-[--duration-normal] group-hover:bg-accent/70 group-focus-visible:bg-accent/70" />
+            </button>
+            <CapturePanel
+              width={captureWidth}
+              captureState={captureState}
+              onCreateCapture={handleCreateCapture}
+              onApplyResult={handleApplyResult}
+              onClose={() => setCaptureOpen(false)}
+            />
+          </div>
+        </div>
         {viewingVersion && (
           <VersionViewer
             version={viewingVersion}

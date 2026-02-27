@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChapterContent } from '../../../shared/cos-types'
 
 interface VersionViewerProps {
@@ -14,7 +14,10 @@ export function VersionViewer({
   onClose,
   onRestore,
 }: VersionViewerProps): React.JSX.Element {
+  const closeAnimationMs = 250
   const [copied, setCopied] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const closeTimeoutRef = useRef<number | null>(null)
   const content = version.content.content_draft || version.content.content_published || ''
   const versionLabel = `Version ${historyLength - version.index}`
 
@@ -32,6 +35,23 @@ export function VersionViewer({
     onRestore(version.hash)
   }, [onRestore, version.hash])
 
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current != null) {
+        window.clearTimeout(closeTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  const handleClose = useCallback(() => {
+    if (isClosing) return
+    setIsClosing(true)
+    closeTimeoutRef.current = window.setTimeout(() => {
+      onClose()
+    }, closeAnimationMs)
+  }, [isClosing, onClose])
+
   const iconButtonClass =
     'rounded-md p-1.5 text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
   const primaryButtonClass =
@@ -40,7 +60,9 @@ export function VersionViewer({
     'rounded-md border border-border px-3 py-1 text-sm text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
 
   return (
-    <div className="w-[400px] border-l border-border bg-bg-surface flex flex-col shrink-0">
+    <div
+      className={`w-[400px] border-l border-border bg-bg-surface flex flex-col shrink-0 transition-[opacity,transform] duration-[--duration-slow] [transition-timing-function:var(--ease-out)] ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
@@ -49,7 +71,7 @@ export function VersionViewer({
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className={iconButtonClass}
           aria-label="Close version viewer"
         >
@@ -66,7 +88,7 @@ export function VersionViewer({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-3">
+      <div className="flex-1 overflow-auto p-3 scrollbar-thin">
         <pre className="whitespace-pre-wrap font-mono text-sm text-text">{content}</pre>
       </div>
 

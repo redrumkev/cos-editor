@@ -33,13 +33,13 @@ function SectionGroup({
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-1 w-full px-2 py-1 text-xs font-semibold uppercase text-text-subtle hover:text-text-muted transition-colors"
+        className="flex items-center gap-1 w-full px-2 py-1 text-xs font-semibold uppercase text-text-subtle hover:text-text hover:bg-bg-hover transition-colors duration-[--duration-normal]"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className={`w-3 h-3 transition-transform ${collapsed ? '' : 'rotate-90'}`}
+          className={`w-3 h-3 transition-transform duration-[--duration-normal] ${collapsed ? '' : 'rotate-90'}`}
         >
           <title>{collapsed ? 'Expand' : 'Collapse'}</title>
           <path
@@ -61,9 +61,9 @@ function SectionGroup({
                 key={ch.slug}
                 type="button"
                 onClick={() => onSelect(sectionType, ch.slug)}
-                className={`flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm truncate transition-colors ${
+                className={`flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm truncate transition-colors duration-[--duration-normal] ${
                   isActive
-                    ? 'bg-bg-overlay text-accent'
+                    ? 'bg-bg-hover text-accent'
                     : 'text-text-muted hover:bg-bg-overlay hover:text-text'
                 }`}
               >
@@ -95,7 +95,7 @@ export function StructureTree({
   const dirty = bufferState?.dirty ?? false
 
   return (
-    <div className="py-1 overflow-y-auto flex-1">
+    <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
       <SectionGroup
         label="Front Matter"
         sectionType="front"

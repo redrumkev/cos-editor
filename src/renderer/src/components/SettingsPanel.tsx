@@ -11,12 +11,15 @@ interface TestResult {
 }
 
 export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Element {
+  const closeAnimationMs = 250
   const [cosApiUrl, setCosApiUrl] = useState('')
   const [cosTenantId, setCosTenantId] = useState('')
   const [testResult, setTestResult] = useState<TestResult | null>(null)
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
+  const closeTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     window.cosEditor.getSettings().then((settings) => {
@@ -50,6 +53,23 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
     return () => panel.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current != null) {
+        window.clearTimeout(closeTimeoutRef.current)
+      }
+    },
+    [],
+  )
+
+  function requestClose() {
+    if (isClosing) return
+    setIsClosing(true)
+    closeTimeoutRef.current = window.setTimeout(() => {
+      onClose()
+    }, closeAnimationMs)
+  }
+
   async function handleTest() {
     setTesting(true)
     setTestResult(null)
@@ -67,7 +87,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
     setSaving(true)
     try {
       await window.cosEditor.setSettings({ cosApiUrl, cosTenantId })
-      onClose()
+      requestClose()
     } finally {
       setSaving(false)
     }
@@ -86,21 +106,26 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/70 p-4 backdrop-blur-sm"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-bg/70 p-4 backdrop-blur-sm transition-opacity duration-[--duration-slow] [transition-timing-function:var(--ease-out)] ${isClosing ? 'opacity-0' : 'opacity-100'}`}
       role="dialog"
       aria-modal="true"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose()
+        if (e.target === e.currentTarget) requestClose()
       }}
     >
       <div
         ref={panelRef}
-        className="w-[420px] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl"
+        className={`w-[420px] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl transition-[opacity,transform] duration-[--duration-slow] [transition-timing-function:var(--ease-out)] ${isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">
           <h2 className="text-sm font-medium">Settings</h2>
-          <button type="button" onClick={onClose} className={iconButtonClass} aria-label="Close">
+          <button
+            type="button"
+            onClick={requestClose}
+            className={iconButtonClass}
+            aria-label="Close"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -168,7 +193,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
-          <button type="button" onClick={onClose} className={ghostButtonClass}>
+          <button type="button" onClick={requestClose} className={ghostButtonClass}>
             Close
           </button>
           <button

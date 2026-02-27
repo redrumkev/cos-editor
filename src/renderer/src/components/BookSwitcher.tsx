@@ -57,7 +57,12 @@ export function BookSwitcher({
   )
 
   if (!connected) {
-    return <span className="text-sm text-text-subtle">COS Editor</span>
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-text-subtle transition-colors duration-[--duration-normal]">
+        <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
+        COS Editor
+      </span>
+    )
   }
 
   return (
@@ -65,6 +70,7 @@ export function BookSwitcher({
       <button
         type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-border bg-bg-surface shadow-sm text-sm font-medium text-text-muted hover:text-text hover:bg-bg-overlay transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
       >
         <span className="truncate max-w-[200px]">
@@ -74,7 +80,7 @@ export function BookSwitcher({
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="w-3.5 h-3.5 shrink-0"
+          className={`h-3.5 w-3.5 shrink-0 transition-transform duration-[--duration-normal] ${open ? 'rotate-180' : ''}`}
         >
           <title>Toggle book list</title>
           <path
@@ -85,7 +91,7 @@ export function BookSwitcher({
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1.5 w-64 bg-bg-overlay border border-border rounded-md shadow-sm z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1.5 w-64 bg-bg-overlay border border-border rounded-md shadow-sm z-50 max-h-60 overflow-y-auto scrollbar-thin transition-opacity duration-[--duration-normal]">
           {books.length === 0 && (
             <div className="px-3 py-2 text-xs text-text-subtle">No books found</div>
           )}
@@ -96,8 +102,8 @@ export function BookSwitcher({
               onClick={() => handleSelect(book)}
               className={`w-full text-left px-3 py-2 text-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
                 selectedBook?.id === book.id
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-text hover:bg-bg-surface'
+                  ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                  : 'text-text hover:bg-bg-surface hover:text-accent'
               }`}
             >
               <div className="truncate">{book.title}</div>

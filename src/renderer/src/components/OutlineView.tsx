@@ -39,7 +39,7 @@ export function OutlineView({ content }: OutlineViewProps): React.JSX.Element {
   }
 
   return (
-    <div className="py-1 overflow-y-auto flex-1">
+    <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
       {headings.map((h, i) => (
         <div
           key={`${h.level}-${h.text}-${i}`}

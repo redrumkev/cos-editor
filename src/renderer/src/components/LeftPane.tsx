@@ -7,6 +7,7 @@ import { StructureTree } from './StructureTree'
 type TabId = 'structure' | 'outline' | 'changes'
 
 interface LeftPaneProps {
+  width: number
   manuscript: ManuscriptStructure | null
   activeTab: TabId
   onTabChange: (tab: TabId) => void
@@ -24,6 +25,7 @@ const tabs: { id: TabId; label: string }[] = [
 ]
 
 export function LeftPane({
+  width,
   manuscript,
   activeTab,
   onTabChange,
@@ -34,7 +36,10 @@ export function LeftPane({
   activeVersionHash,
 }: LeftPaneProps): React.JSX.Element {
   return (
-    <div className="w-60 min-w-[180px] bg-bg-surface border-r border-border flex flex-col shrink-0">
+    <div
+      className="min-w-[180px] bg-bg-surface border-r border-border flex flex-col shrink-0"
+      style={{ width }}
+    >
       {/* Tab bar */}
       <div className="flex border-b border-border shrink-0 bg-bg">
         {tabs.map((tab) => (
@@ -44,7 +49,7 @@ export function LeftPane({
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               activeTab === tab.id
-                ? 'text-accent border-b-2 border-accent bg-bg-surface'
+                ? 'text-accent border-b-2 border-accent bg-bg-hover hover:bg-bg-overlay/80'
                 : 'text-text-subtle hover:text-text hover:bg-bg-overlay/60'
             }`}
           >
