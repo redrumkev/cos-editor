@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const PRESETS = ['Kindle', 'Paperback', 'Hardcover'] as const
 type Preset = (typeof PRESETS)[number]
@@ -22,6 +22,19 @@ interface PreviewPaneProps {
 
 export function PreviewPane({ content }: PreviewPaneProps): React.JSX.Element {
   const [preset, setPreset] = useState<Preset>('Paperback')
+  const [debouncedContent, setDebouncedContent] = useState(content)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce content updates so markdown-it only re-renders after 300ms idle
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      setDebouncedContent(content)
+    }, 300)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [content])
 
   const cyclePreset = useCallback(() => {
     setPreset((current) => {
@@ -30,7 +43,7 @@ export function PreviewPane({ content }: PreviewPaneProps): React.JSX.Element {
     })
   }, [])
 
-  const rendered = useMemo(() => md.render(content), [content])
+  const rendered = useMemo(() => md.render(debouncedContent), [debouncedContent])
 
   return (
     <div className="flex flex-col h-full bg-bg">

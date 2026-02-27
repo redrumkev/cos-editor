@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ManuscriptStructure, SectionType } from '../../../shared/cos-types'
 
 interface StructureTreeProps {
@@ -17,6 +17,9 @@ interface SectionGroupProps {
   onSelect: (section: SectionType, slug: string) => void
 }
 
+const VIRTUALIZE_THRESHOLD = 100
+const VISIBLE_SLICE_SIZE = 60
+
 function SectionGroup({
   label,
   sectionType,
@@ -27,6 +30,24 @@ function SectionGroup({
   onSelect,
 }: SectionGroupProps): React.JSX.Element {
   const [collapsed, setCollapsed] = useState(false)
+  const [sliceStart, setSliceStart] = useState(0)
+
+  const shouldVirtualize = chapters.length > VIRTUALIZE_THRESHOLD
+
+  const visibleChapters = useMemo(() => {
+    if (!shouldVirtualize) return chapters
+    return chapters.slice(sliceStart, sliceStart + VISIBLE_SLICE_SIZE)
+  }, [chapters, shouldVirtualize, sliceStart])
+
+  const handleScroll = useMemo(() => {
+    if (!shouldVirtualize) return undefined
+    return (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget
+      const scrollRatio = el.scrollTop / (el.scrollHeight - el.clientHeight || 1)
+      const maxStart = Math.max(0, chapters.length - VISIBLE_SLICE_SIZE)
+      setSliceStart(Math.min(maxStart, Math.floor(scrollRatio * maxStart)))
+    }
+  }, [shouldVirtualize, chapters.length])
 
   return (
     <div>
@@ -52,8 +73,11 @@ function SectionGroup({
         <span className="text-text-subtle ml-auto">{chapters.length}</span>
       </button>
       {!collapsed && (
-        <div className="ml-2">
-          {chapters.map((ch) => {
+        <div
+          className={`ml-2 ${shouldVirtualize ? 'overflow-y-auto max-h-[400px]' : ''}`}
+          onScroll={handleScroll}
+        >
+          {visibleChapters.map((ch) => {
             const isActive = activeSection === sectionType && activeSlug === ch.slug
             const showDirty = isActive && dirty
             return (

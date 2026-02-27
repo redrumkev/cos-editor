@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import type { CasHistoryEntry } from '../../../shared/cos-types'
+
+const VIRTUALIZE_THRESHOLD = 100
+const VISIBLE_SLICE_SIZE = 60
 
 interface ChangesViewProps {
   entries: CasHistoryEntry[]
@@ -34,14 +38,35 @@ export function ChangesView({
   activeHash,
   onViewVersion,
 }: ChangesViewProps): React.JSX.Element {
+  const [sliceStart, setSliceStart] = useState(0)
+
   if (entries.length === 0) {
     return <div className="px-3 py-4 text-sm text-text-subtle">No history</div>
   }
 
+  const shouldVirtualize = entries.length > VIRTUALIZE_THRESHOLD
+
+  const visibleEntries = shouldVirtualize
+    ? entries.slice(sliceStart, sliceStart + VISIBLE_SLICE_SIZE)
+    : entries
+
+  const handleScroll = shouldVirtualize
+    ? (e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget
+        const scrollRatio = el.scrollTop / (el.scrollHeight - el.clientHeight || 1)
+        const maxStart = Math.max(0, entries.length - VISIBLE_SLICE_SIZE)
+        setSliceStart(Math.min(maxStart, Math.floor(scrollRatio * maxStart)))
+      }
+    : undefined
+
   return (
-    <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
-      {entries.map((entry, index) => {
-        const versionLabel = `v${entries.length - index}`
+    <div
+      className={`py-1 overflow-y-auto flex-1 scrollbar-thin ${shouldVirtualize ? 'max-h-[400px]' : ''}`}
+      onScroll={handleScroll}
+    >
+      {visibleEntries.map((entry, i) => {
+        const originalIndex = shouldVirtualize ? sliceStart + i : i
+        const versionLabel = `v${entries.length - originalIndex}`
         const shortHash = entry.hash.slice(0, 7)
         const isActive = entry.hash === activeHash
 

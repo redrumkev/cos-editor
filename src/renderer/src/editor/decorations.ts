@@ -119,7 +119,7 @@ const decorationPlugin = ViewPlugin.fromClass(
       this.decorations = buildDecorations(view)
     }
     update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged || update.selectionSet) {
+      if (update.docChanged || update.viewportChanged) {
         this.decorations = buildDecorations(update.view)
       }
     }
