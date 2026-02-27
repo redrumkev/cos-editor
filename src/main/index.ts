@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
 import type {
   CaptureCreateRequest,
@@ -451,6 +452,35 @@ app.whenReady().then(() => {
   // Check COS connection on startup and poll periodically
   checkCosConnection()
   healthCheckTimer = setInterval(checkCosConnection, HEALTH_CHECK_INTERVAL_MS)
+
+  // --- Auto-update (production only) ---
+  if (!is.dev) {
+    autoUpdater.autoDownload = true
+    autoUpdater.autoInstallOnAppQuit = true
+
+    autoUpdater.on('checking-for-update', () => {
+      console.log('[auto-update] Checking for update...')
+    })
+    autoUpdater.on('update-available', (info) => {
+      console.log(`[auto-update] Update available: ${info.version}`)
+    })
+    autoUpdater.on('update-not-available', () => {
+      console.log('[auto-update] No update available.')
+    })
+    autoUpdater.on('download-progress', (progress) => {
+      console.log(`[auto-update] Download progress: ${Math.round(progress.percent)}%`)
+    })
+    autoUpdater.on('update-downloaded', (info) => {
+      console.log(
+        `[auto-update] Update downloaded: ${info.version} — will install on next restart.`,
+      )
+    })
+    autoUpdater.on('error', (err) => {
+      console.error('[auto-update] Error:', err.message)
+    })
+
+    autoUpdater.checkForUpdatesAndNotify()
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

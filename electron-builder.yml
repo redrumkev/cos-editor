@@ -25,9 +25,25 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+  # Notarization requires the following environment variables at build time:
+  #   APPLE_ID                    — Apple Developer account email
+  #   APPLE_APP_SPECIFIC_PASSWORD — App-specific password from https://appleid.apple.com
+  #   APPLE_TEAM_ID               — Developer Team ID (found in Apple Developer portal)
+  notarize: true
 dmg:
   artifactName: ${name}-${version}.${ext}
+  background: build/background.png
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 140
+      y: 232
+      type: file
+    - x: 400
+      y: 232
+      type: link
+      path: /Applications
 linux:
   target:
     - AppImage
@@ -39,5 +55,6 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: redrumkev
+  repo: cos-editor
