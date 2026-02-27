@@ -19,6 +19,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { ConflictDialog } from './components/ConflictDialog'
 import { ConnectionBanner } from './components/ConnectionBanner'
 import { LeftPane } from './components/LeftPane'
+import { PreviewPane } from './components/PreviewPane'
 import { SettingsPanel } from './components/SettingsPanel'
 import { StatusBar } from './components/StatusBar'
 import { TopBar } from './components/TopBar'
@@ -49,6 +50,7 @@ function App(): React.JSX.Element {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [captureWidth, setCaptureWidth] = useState(320)
   const [chapterLoading, setChapterLoading] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const resizeStateRef = useRef<{
     panel: 'left' | 'capture'
@@ -282,6 +284,9 @@ function App(): React.JSX.Element {
         case 'open-command-palette':
           setCommandPaletteOpen(true)
           break
+        case 'toggle-preview':
+          setShowPreview((v) => !v)
+          break
       }
     })
   }, [])
@@ -314,6 +319,18 @@ function App(): React.JSX.Element {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [conflict, settingsOpen, commandPaletteOpen, viewingVersion, captureOpen])
+
+  // Keyboard shortcut: Cmd+Shift+P toggles preview
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
+        e.preventDefault()
+        setShowPreview((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Debounced layout persistence
   const layoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -538,12 +555,22 @@ function App(): React.JSX.Element {
             </button>
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <EditorMount
-            loading={chapterLoading || !bufferState}
-            content={bufferState?.content ?? ''}
-            onChange={handleEditorChange}
-          />
+        <div className="flex-1 min-w-0 flex">
+          <div className="flex-1 min-w-0">
+            <EditorMount
+              loading={chapterLoading || !bufferState}
+              content={bufferState?.content ?? ''}
+              onChange={handleEditorChange}
+            />
+          </div>
+          {showPreview && (
+            <>
+              <div className="w-px shrink-0 bg-border/40" />
+              <div className="flex-1 min-w-0">
+                <PreviewPane content={bufferState?.content ?? ''} />
+              </div>
+            </>
+          )}
         </div>
         <div
           className="overflow-hidden shrink-0"
@@ -597,6 +624,7 @@ function App(): React.JSX.Element {
         onToggleMode={() => handleBufferModeChange(bufferMode === 'live' ? 'draft' : 'live')}
         onToggleLeftPane={() => setLeftPaneOpen((v) => !v)}
         onToggleCapturePane={() => setCaptureOpen((v) => !v)}
+        onTogglePreview={() => setShowPreview((v) => !v)}
         onOpenSettings={() => setSettingsOpen(true)}
         canAcceptDraft={canAcceptDraft}
         onAcceptDraft={handleAcceptDraft}
