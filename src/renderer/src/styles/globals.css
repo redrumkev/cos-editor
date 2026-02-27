@@ -4,15 +4,58 @@
   --color-bg: #1e1e2e;
   --color-bg-surface: #313244;
   --color-bg-overlay: #45475a;
+  --color-bg-hover: #3b3d54;
   --color-text: #cdd6f4;
   --color-text-muted: #a6adc8;
   --color-text-subtle: #6c7086;
   --color-accent: #89b4fa;
   --color-accent-hover: #74c7ec;
+  --color-accent-muted: #89b4fa33;
+  --color-info: #89dceb;
   --color-success: #a6e3a1;
   --color-warning: #f9e2af;
   --color-error: #f38ba8;
   --color-border: #585b70;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  --duration-slow: 250ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
   --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 }

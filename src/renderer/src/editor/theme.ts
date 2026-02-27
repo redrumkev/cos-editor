@@ -2,6 +2,25 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { EditorView } from '@codemirror/view'
 import { tags } from '@lezer/highlight'
 
+// Token mapping (sync with globals.css @theme):
+// #1e1e2e -> --color-bg
+// #313244 -> --color-bg-surface
+// #45475a -> --color-bg-overlay
+// #3b3d54 -> --color-bg-hover (closest hover elevation token for overlays)
+// #cdd6f4 -> --color-text
+// #a6adc8 -> --color-text-muted
+// #6c7086 -> --color-text-subtle
+// #89b4fa -> --color-accent
+// #74c7ec -> --color-accent-hover
+// #89dceb -> --color-info
+// #a6e3a1 -> --color-success
+// #f9e2af -> --color-warning
+// #f38ba8 -> --color-error
+// #585b70 -> --color-border
+// #89b4fa33 / #89b4fa30 / #89b4fa20 -> --color-accent-muted variants
+// #f9e2af30 / #f9e2af50 -> --color-warning alpha variants
+// #fab387, #cba6f7, #f5c2e7 are currently unmapped semantic accents (consider new tokens in Move 14.2)
+
 const editorTheme = EditorView.theme(
   {
     '&': {
