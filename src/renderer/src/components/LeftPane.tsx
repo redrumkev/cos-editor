@@ -36,16 +36,16 @@ export function LeftPane({
   return (
     <div className="w-60 min-w-[180px] bg-bg-surface border-r border-border flex flex-col shrink-0">
       {/* Tab bar */}
-      <div className="flex border-b border-border shrink-0">
+      <div className="flex border-b border-border shrink-0 bg-bg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => onTabChange(tab.id)}
-            className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
+            className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               activeTab === tab.id
-                ? 'text-accent border-b-2 border-accent'
-                : 'text-text-subtle hover:text-text-muted'
+                ? 'text-accent border-b-2 border-accent bg-bg-surface'
+                : 'text-text-subtle hover:text-text hover:bg-bg-overlay/60'
             }`}
           >
             {tab.label}

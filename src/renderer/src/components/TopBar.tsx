@@ -36,14 +36,14 @@ export function TopBar({
       />
       <div className="flex items-center gap-3">
         {/* Live / Draft toggle */}
-        <div className="flex items-center rounded border border-border overflow-hidden text-xs">
+        <div className="flex items-center overflow-hidden rounded-md border border-border bg-bg shadow-sm text-xs">
           <button
             type="button"
             onClick={() => onBufferModeChange('live')}
-            className={`px-2.5 py-1 transition-colors ${
+            className={`px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               bufferMode === 'live'
                 ? 'bg-accent/20 text-accent font-medium'
-                : 'text-text-muted hover:bg-bg-overlay'
+                : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >
             Live
@@ -51,10 +51,10 @@ export function TopBar({
           <button
             type="button"
             onClick={() => onBufferModeChange('draft')}
-            className={`px-2.5 py-1 transition-colors ${
+            className={`px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
               bufferMode === 'draft'
                 ? 'bg-accent/20 text-accent font-medium'
-                : 'text-text-muted hover:bg-bg-overlay'
+                : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >
             Draft
@@ -65,7 +65,7 @@ export function TopBar({
           type="button"
           onClick={onAcceptDraft}
           disabled={!canAcceptDraft}
-          className="px-2.5 py-1 text-xs rounded border border-border text-success hover:bg-success/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-2.5 py-1 text-xs rounded-md border border-border shadow-sm text-success hover:bg-success/10 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Accept Draft
         </button>
@@ -73,10 +73,10 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleCapture}
-          className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+          className={`px-2.5 py-1 text-xs rounded-md border shadow-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
             captureOpen
               ? 'bg-accent/20 text-accent border-accent/40 font-medium'
-              : 'border-border text-text-muted hover:bg-bg-overlay'
+              : 'border-border text-text-muted hover:bg-bg-overlay hover:text-text'
           }`}
           title="Toggle capture panel"
         >
@@ -95,7 +95,7 @@ export function TopBar({
         <button
           type="button"
           onClick={onSettingsClick}
-          className="p-1 rounded hover:bg-bg-overlay text-text-muted hover:text-text transition-colors"
+          className="p-1 rounded-md hover:bg-bg-overlay text-text-muted hover:text-text transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           aria-label="Settings"
         >
           <svg

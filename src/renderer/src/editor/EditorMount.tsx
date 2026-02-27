@@ -48,5 +48,10 @@ export function EditorMount({ content, onChange }: EditorMountProps): React.JSX.
     }
   }, [content])
 
-  return <div ref={containerRef} className="flex-1 overflow-auto" />
+  return (
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-auto transition-colors duration-[--duration-normal] focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-bg"
+    />
+  )
 }

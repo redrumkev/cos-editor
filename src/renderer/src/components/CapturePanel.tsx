@@ -39,6 +39,14 @@ export function CapturePanel({
   const todo = snapshot?.todo
   const results = snapshot?.results ?? []
   const isPolling = todo && !['ready_for_review', 'done', 'closed'].includes(todo.status)
+  const iconButtonClass =
+    'rounded-md p-1.5 text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const inputClass =
+    'flex-1 rounded-md border border-border bg-bg-overlay px-2 py-1.5 text-sm text-text placeholder-text-subtle transition-colors duration-[--duration-normal] focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const secondaryButtonClass =
+    'rounded-md px-2 py-1.5 text-sm text-text bg-bg-overlay transition-colors duration-[--duration-normal] hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const primaryButtonClass =
+    'w-full rounded-md bg-accent py-1.5 text-sm font-medium text-bg transition-colors duration-[--duration-normal] hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
 
   return (
     <div className="w-80 border-l border-border flex flex-col bg-bg-surface shrink-0">
@@ -50,7 +58,7 @@ export function CapturePanel({
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded hover:bg-bg-overlay text-text-muted hover:text-text transition-colors"
+          className={iconButtonClass}
           aria-label="Close capture panel"
         >
           <svg
@@ -75,13 +83,13 @@ export function CapturePanel({
             onKeyDown={handleKeyDown}
             placeholder="Ask agent to..."
             disabled={submitting}
-            className="flex-1 bg-bg-overlay border border-border rounded px-2 py-1.5 text-sm text-text placeholder-text-subtle focus:outline-none focus:border-accent"
+            className={inputClass}
           />
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!input.trim() || submitting}
-            className="px-2 py-1.5 bg-bg-overlay hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed rounded text-sm text-text transition-colors"
+            className={secondaryButtonClass}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +115,7 @@ export function CapturePanel({
         {todo && (
           <div className="space-y-3">
             {/* Todo card */}
-            <div className="bg-bg-overlay rounded p-3 border border-border">
+            <div className="bg-bg-overlay rounded-md p-3 border border-border shadow-sm">
               <p className="text-sm text-text mb-2">{todo.content}</p>
               <div className="flex items-center gap-2">
                 <span
@@ -131,7 +139,7 @@ export function CapturePanel({
 
             {/* Results */}
             {results.map((result: CaptureResult) => (
-              <div key={result.id} className="bg-bg-overlay rounded p-3 border border-accent/30">
+              <div key={result.id} className="bg-bg-overlay rounded-md p-3 border border-accent/30">
                 <p className="text-sm text-text whitespace-pre-wrap mb-3">
                   {result.result.content}
                 </p>
@@ -139,7 +147,7 @@ export function CapturePanel({
                   <button
                     type="button"
                     onClick={() => onApplyResult(result.result.content)}
-                    className="w-full py-1.5 bg-accent hover:bg-accent-hover rounded text-sm text-bg font-medium transition-colors"
+                    className={primaryButtonClass}
                   >
                     Apply to Draft
                   </button>

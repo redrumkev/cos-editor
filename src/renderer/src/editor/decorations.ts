@@ -158,17 +158,17 @@ const decorationStyles = EditorView.baseTheme({
     fontStyle: 'italic',
   },
   '.cm-md-code': {
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    backgroundColor: 'rgba(69, 71, 90, 0.4)',
-    padding: '1px 4px',
-    borderRadius: '3px',
+    fontFamily: 'var(--font-mono)',
+    backgroundColor: 'color-mix(in srgb, var(--color-bg-overlay) 40%, transparent)',
+    padding: '1px var(--spacing-xs)',
+    borderRadius: 'var(--radius-sm)',
   },
 
   // Blockquote
   '.cm-md-blockquote': {
-    borderLeft: '3px solid #585b70',
-    paddingLeft: '12px',
-    color: '#a6adc8',
+    borderLeft: '3px solid var(--color-border)',
+    paddingLeft: 'var(--spacing-md)',
+    color: 'var(--color-text-muted)',
   },
 })
 

@@ -33,26 +33,26 @@ export function StatusBar({ bufferState, historyLength }: StatusBarProps): React
   const wordCount = bufferState?.wordCount ?? 0
 
   return (
-    <div className="flex items-center justify-between px-4 h-7 bg-bg-surface border-t border-border text-xs shrink-0 select-none">
+    <div className="flex items-center px-4 h-7 bg-bg-surface border-t border-border text-xs shrink-0 select-none">
       {/* Chapter name */}
-      <div className="text-text-muted truncate max-w-[200px]">{chapterLabel}</div>
+      <div className="min-w-0 flex-1 text-text-muted truncate max-w-[200px]">{chapterLabel}</div>
 
       {/* Version info */}
-      <div className="flex items-center gap-3">
+      <div className="min-w-0 flex-1 flex items-center justify-center gap-2.5 truncate">
         {historyLength != null && historyLength > 0 && (
-          <span className="text-text-subtle">
+          <span className="text-text-subtle truncate">
             v{historyLength}
             {bufferState?.headHash ? ` (${bufferState.headHash.slice(0, 7)})` : ''}
           </span>
         )}
         {/* Word count */}
-        <span className="text-text-subtle">
+        <span className="text-text-subtle truncate">
           {wordCount.toLocaleString()} {wordCount === 1 ? 'word' : 'words'}
         </span>
       </div>
 
       {/* Save status */}
-      <div>
+      <div className="min-w-0 flex-1 text-right truncate">
         <SaveStatus bufferState={bufferState} />
       </div>
     </div>

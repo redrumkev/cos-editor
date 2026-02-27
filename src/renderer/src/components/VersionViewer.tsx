@@ -32,6 +32,13 @@ export function VersionViewer({
     onRestore(version.hash)
   }, [onRestore, version.hash])
 
+  const iconButtonClass =
+    'rounded-md p-1.5 text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const primaryButtonClass =
+    'rounded-md bg-accent px-3 py-1 text-sm font-medium text-bg transition-colors duration-[--duration-normal] hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const secondaryButtonClass =
+    'rounded-md border border-border px-3 py-1 text-sm text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+
   return (
     <div className="w-[400px] border-l border-border bg-bg-surface flex flex-col shrink-0">
       {/* Header */}
@@ -43,7 +50,7 @@ export function VersionViewer({
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded hover:bg-bg-overlay text-text-muted hover:text-text transition-colors"
+          className={iconButtonClass}
           aria-label="Close version viewer"
         >
           <svg
@@ -65,18 +72,10 @@ export function VersionViewer({
 
       {/* Footer */}
       <div className="flex items-center gap-2 px-3 py-2 border-t border-border shrink-0">
-        <button
-          type="button"
-          onClick={handleRestore}
-          className="px-3 py-1 text-sm font-medium bg-accent text-bg rounded hover:bg-accent-hover transition-colors"
-        >
+        <button type="button" onClick={handleRestore} className={primaryButtonClass}>
           Restore
         </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="px-3 py-1 text-sm text-text-muted hover:text-text border border-border rounded hover:bg-bg-overlay transition-colors"
-        >
+        <button type="button" onClick={handleCopy} className={secondaryButtonClass}>
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>

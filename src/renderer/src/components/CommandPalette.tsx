@@ -36,6 +36,7 @@ export function CommandPalette({
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const commands: Command[] = useMemo(
     () => [
@@ -93,6 +94,34 @@ export function CommandPalette({
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    const panel = panelRef.current
+    if (!panel) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      const currentPanel = panelRef.current
+      if (!currentPanel) return
+      if (event.key !== 'Tab') return
+      const focusable = currentPanel.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+
+    panel.addEventListener('keydown', handleKeyDown)
+    return () => panel.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
   if (!open) return null
 
   function execute(cmd: Command) {
@@ -113,15 +142,22 @@ export function CommandPalette({
     }
   }
 
+  const optionBaseClass =
+    'flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset'
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-bg/70 px-4 pb-4 pt-[20vh] backdrop-blur-sm"
       role="dialog"
+      aria-modal="true"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="w-[480px] max-h-[60vh] bg-bg-surface border border-border rounded-lg shadow-xl overflow-hidden flex flex-col">
+      <div
+        ref={panelRef}
+        className="flex max-h-[60vh] w-[480px] flex-col overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl"
+      >
         <div className="p-3 border-b border-border">
           <input
             ref={inputRef}
@@ -133,14 +169,14 @@ export function CommandPalette({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Type a command..."
-            className="w-full bg-transparent text-text text-sm outline-none placeholder-text-subtle"
+            className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-text placeholder-text-subtle transition-colors duration-[--duration-normal] focus:outline-none focus-visible:border-border focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
           />
         </div>
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto p-2">
           {filtered.map((cmd, i) => (
             <div
               key={cmd.id}
-              className={`flex items-center justify-between px-3 py-2 cursor-pointer text-sm ${
+              className={`cursor-pointer ${optionBaseClass} ${
                 i === selectedIndex
                   ? 'bg-accent/20 text-text'
                   : 'text-text-muted hover:bg-bg-overlay'

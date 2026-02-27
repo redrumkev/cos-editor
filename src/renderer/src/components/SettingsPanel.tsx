@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface SettingsPanelProps {
   onClose: () => void
@@ -16,12 +16,38 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
   const [testResult, setTestResult] = useState<TestResult | null>(null)
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     window.cosEditor.getSettings().then((settings) => {
       setCosApiUrl(settings.cosApiUrl)
       setCosTenantId(settings.cosTenantId)
     })
+  }, [])
+
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+    const focusable = panel.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    first?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Tab' || focusable.length === 0) return
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+
+    panel.addEventListener('keydown', handleKeyDown)
+    return () => panel.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   async function handleTest() {
@@ -47,24 +73,34 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
     }
   }
 
+  const iconButtonClass =
+    'p-1.5 rounded-md text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const inputClass =
+    'w-full rounded-md border border-border bg-bg px-3 py-1.5 text-sm text-text placeholder-text-subtle transition-colors duration-[--duration-normal] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus:border-accent'
+  const secondaryButtonClass =
+    'px-3 py-1.5 text-sm rounded-md border border-border bg-bg-overlay text-text transition-colors duration-[--duration-normal] hover:bg-border disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const ghostButtonClass =
+    'px-3 py-1.5 text-sm rounded-md text-text-muted transition-colors duration-[--duration-normal] hover:bg-bg-overlay hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+  const primaryButtonClass =
+    'px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-bg transition-colors duration-[--duration-normal] hover:bg-accent-hover disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/70 p-4 backdrop-blur-sm"
       role="dialog"
+      aria-modal="true"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-bg-surface rounded-lg border border-border shadow-xl w-[420px] max-w-[90vw]">
+      <div
+        ref={panelRef}
+        className="w-[420px] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-bg-surface shadow-xl"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border">
           <h2 className="text-sm font-medium">Settings</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded hover:bg-bg-overlay text-text-muted hover:text-text transition-colors"
-            aria-label="Close"
-          >
+          <button type="button" onClick={onClose} className={iconButtonClass} aria-label="Close">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -92,7 +128,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
               value={cosApiUrl}
               onChange={(e) => setCosApiUrl(e.target.value)}
               placeholder="http://localhost:8484"
-              className="w-full px-3 py-1.5 text-sm bg-bg rounded border border-border text-text placeholder-text-subtle focus:outline-none focus:border-accent"
+              className={inputClass}
             />
           </div>
 
@@ -107,7 +143,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
               value={cosTenantId}
               onChange={(e) => setCosTenantId(e.target.value)}
               placeholder="default"
-              className="w-full px-3 py-1.5 text-sm bg-bg rounded border border-border text-text placeholder-text-subtle focus:outline-none focus:border-accent"
+              className={inputClass}
             />
           </div>
 
@@ -117,7 +153,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
               type="button"
               onClick={handleTest}
               disabled={testing}
-              className="px-3 py-1.5 text-sm bg-bg-overlay rounded hover:bg-border text-text transition-colors disabled:opacity-50"
+              className={secondaryButtonClass}
             >
               {testing ? 'Testing...' : 'Test Connection'}
             </button>
@@ -132,18 +168,14 @@ export function SettingsPanel({ onClose }: SettingsPanelProps): React.JSX.Elemen
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-sm rounded hover:bg-bg-overlay text-text-muted transition-colors"
-          >
+          <button type="button" onClick={onClose} className={ghostButtonClass}>
             Close
           </button>
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-3 py-1.5 text-sm bg-accent rounded hover:bg-accent-hover text-bg font-medium transition-colors disabled:opacity-50"
+            className={primaryButtonClass}
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

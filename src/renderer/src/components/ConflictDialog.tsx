@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { BufferConflict } from '../../../shared/ipc'
 
 interface ConflictDialogProps {
@@ -15,16 +16,48 @@ export function ConflictDialog({
 }: ConflictDialogProps): React.JSX.Element {
   const title = conflict.operation === 'accept' ? 'Accept Conflict' : 'Save Conflict'
   const modeLabel = conflict.mode === 'draft' ? 'Draft' : 'Live'
+  const panelRef = useRef<HTMLDivElement>(null)
+  const buttonBaseClass =
+    'px-3 py-1.5 text-sm rounded-md border transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg'
+
+  useEffect(() => {
+    const panel = panelRef.current
+    if (!panel) return
+    const focusable = panel.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    first?.focus()
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== 'Tab' || focusable.length === 0) return
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+
+    panel.addEventListener('keydown', handleKeyDown)
+    return () => panel.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/70 p-4 backdrop-blur-sm"
       role="dialog"
+      aria-modal="true"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCancel()
       }}
     >
-      <div className="bg-bg-surface border border-border rounded-lg shadow-lg w-[420px] p-5">
+      <div
+        ref={panelRef}
+        className="w-[420px] max-w-[90vw] rounded-xl border border-border bg-bg-surface p-5 shadow-xl"
+      >
         <h2 className="text-base font-semibold text-text mb-2">{title}</h2>
         <p className="text-sm text-text-muted mb-1">
           Mode: <span className="text-text">{modeLabel}</span>
@@ -34,21 +67,21 @@ export function ConflictDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 text-sm rounded border border-border text-text-muted hover:bg-bg-overlay transition-colors"
+            className={`${buttonBaseClass} border-border text-text-muted hover:bg-bg-overlay hover:text-text`}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onReload}
-            className="px-3 py-1.5 text-sm rounded border border-border text-text hover:bg-bg-overlay transition-colors"
+            className={`${buttonBaseClass} border-border text-text hover:bg-bg-overlay`}
           >
             Reload Server
           </button>
           <button
             type="button"
             onClick={onOverwrite}
-            className="px-3 py-1.5 text-sm rounded bg-warning/20 border border-warning/40 text-warning hover:bg-warning/30 transition-colors"
+            className={`${buttonBaseClass} border-warning/40 bg-warning/20 text-warning hover:bg-warning/30`}
           >
             Overwrite
           </button>

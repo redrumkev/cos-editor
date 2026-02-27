@@ -65,7 +65,7 @@ export function BookSwitcher({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-sm font-medium text-text-muted hover:text-text transition-colors"
+        className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-border bg-bg-surface shadow-sm text-sm font-medium text-text-muted hover:text-text hover:bg-bg-overlay transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
       >
         <span className="truncate max-w-[200px]">
           {selectedBook ? selectedBook.title : 'Select a book...'}
@@ -85,7 +85,7 @@ export function BookSwitcher({
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-bg-overlay border border-border rounded shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1.5 w-64 bg-bg-overlay border border-border rounded-md shadow-sm z-50 max-h-60 overflow-y-auto">
           {books.length === 0 && (
             <div className="px-3 py-2 text-xs text-text-subtle">No books found</div>
           )}
@@ -94,8 +94,10 @@ export function BookSwitcher({
               key={book.id}
               type="button"
               onClick={() => handleSelect(book)}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-bg-surface transition-colors ${
-                selectedBook?.id === book.id ? 'text-accent' : 'text-text'
+              className={`w-full text-left px-3 py-2 text-sm transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                selectedBook?.id === book.id
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-text hover:bg-bg-surface'
               }`}
             >
               <div className="truncate">{book.title}</div>
