@@ -230,6 +230,11 @@ function buildAppMenu(): Electron.Menu {
           accelerator: 'CmdOrCtrl+D',
           click: () => sendCommand({ type: 'toggle-buffer-mode' }),
         },
+        {
+          label: 'Toggle Preview',
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click: () => sendCommand({ type: 'toggle-preview' }),
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'toggleDevTools' },

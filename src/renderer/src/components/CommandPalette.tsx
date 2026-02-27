@@ -17,6 +17,7 @@ interface CommandPaletteProps {
   onToggleLeftPane: () => void
   onToggleCapturePane: () => void
   onOpenSettings: () => void
+  onTogglePreview: () => void
   canAcceptDraft: boolean
   onAcceptDraft: () => void
 }
@@ -30,6 +31,7 @@ export function CommandPalette({
   onToggleLeftPane,
   onToggleCapturePane,
   onOpenSettings,
+  onTogglePreview,
   canAcceptDraft,
   onAcceptDraft,
 }: CommandPaletteProps): React.JSX.Element | null {
@@ -69,6 +71,12 @@ export function CommandPalette({
         shortcut: '\u2318\u21e7B',
         action: onToggleCapturePane,
       },
+      {
+        id: 'toggle-preview',
+        title: 'Toggle Preview',
+        shortcut: '\u2318\u21e7P',
+        action: onTogglePreview,
+      },
       { id: 'settings', title: 'Open Settings', shortcut: '\u2318,', action: onOpenSettings },
     ],
     [
@@ -79,6 +87,7 @@ export function CommandPalette({
       canAcceptDraft,
       onToggleLeftPane,
       onToggleCapturePane,
+      onTogglePreview,
       onOpenSettings,
     ],
   )

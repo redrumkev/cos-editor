@@ -47,6 +47,7 @@ export type AppCommand =
   | { type: 'toggle-capture-pane' }
   | { type: 'toggle-buffer-mode' }
   | { type: 'open-command-palette' }
+  | { type: 'toggle-preview' }
 
 // Buffer mode
 export type BufferMode = 'live' | 'draft'
