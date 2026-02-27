@@ -20,7 +20,7 @@ export function getExtensions(onChange: (update: ViewUpdate) => void) {
     markdown({ base: markdownLanguage }),
 
     // Editor features
-    history(),
+    history({ minDepth: 500 }),
     drawSelection(),
     highlightActiveLine(),
     highlightSelectionMatches(),
