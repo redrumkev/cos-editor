@@ -1,14 +1,9 @@
 # COS Editor Specification
 
-The canonical specification lives in the NEXUS federal repository:
+The original 1500-line specification has been deleted. Unique content was extracted to:
 
-**`~/dev/NEXUS/vision/cos/cos_editor-spec.md`**
+- **Move 15 ideation** — appended to `~/dev/NEXUS/vision/cos/COS_EDITOR_CRITICAL_PATH.md`
+- **UI wireframes** — `docs/DESIGN_INTENT.md` (this repo)
+- **CM6 setup reference** — `docs/CM6_SETUP.md` (this repo)
 
-This file is the single source of truth for:
-- Editor architecture and UI vision
-- Three-layer book model (Dossier / Manuscript / Telemetry)
-- Move plans and implementation decisions
-- Backend integration points
-
-Move 15 beads are tracked in this repo's `.beads/` directory.
-See `bd list --label move-15` for current status.
+Full historical spec is recoverable from NEXUS git history.

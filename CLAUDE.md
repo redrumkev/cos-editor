@@ -5,8 +5,8 @@
 1. `~/dev/NEXUS/AGENTS.md` — Federal constitution
 2. This `CLAUDE.md` — Repo-specific rules
 3. `AGENTS_LOCAL.md` — Stack, architecture, forbidden tools
-4. `~/dev/NEXUS/vision/cos/COS_EDITOR_CRITICAL_PATH.md` — Execution plan
-5. `~/dev/NEXUS/vision/cos/cos_editor-spec.md` — System spec
+4. `~/dev/NEXUS/vision/cos/COS_EDITOR_CRITICAL_PATH.md` — Execution plan + Move 15 ideation
+5. `docs/DESIGN_INTENT.md` — UI wireframes, `docs/CM6_SETUP.md` — CM6 reference
 6. `make help` — Available workflows
 
 ## Quick Context
