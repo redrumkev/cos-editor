@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { ManuscriptStructure, SectionType } from '../../../shared/cos-types'
+import type { ChapterSummary, ManuscriptStructure, SectionType } from '../../../shared/cos-types'
 
 interface StructureTreeProps {
   manuscript: ManuscriptStructure | null
@@ -10,7 +10,7 @@ interface StructureTreeProps {
 interface SectionGroupProps {
   label: string
   sectionType: SectionType
-  chapters: { slug: string; title: string }[]
+  chapters: ChapterSummary[]
   activeSection: string | null
   activeSlug: string | null
   dirty: boolean
@@ -120,31 +120,40 @@ export function StructureTree({
 
   return (
     <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
-      <SectionGroup
-        label="Front Matter"
-        sectionType="front"
-        chapters={manuscript.front.chapters}
-        activeSection={activeSection}
-        activeSlug={activeSlug}
-        dirty={dirty}
+        <SectionGroup
+          label="Front Matter"
+          sectionType="front"
+          chapters={manuscript.front}
+          activeSection={activeSection}
+          activeSlug={activeSlug}
+          dirty={dirty}
         onSelect={onSelectChapter}
       />
-      <SectionGroup
-        label="Body"
-        sectionType="body"
-        chapters={manuscript.body.chapters}
-        activeSection={activeSection}
-        activeSlug={activeSlug}
-        dirty={dirty}
+        <SectionGroup
+          label="Body"
+          sectionType="body"
+          chapters={manuscript.body}
+          activeSection={activeSection}
+          activeSlug={activeSlug}
+          dirty={dirty}
         onSelect={onSelectChapter}
       />
-      <SectionGroup
-        label="Back Matter"
-        sectionType="back"
-        chapters={manuscript.back.chapters}
-        activeSection={activeSection}
-        activeSlug={activeSlug}
-        dirty={dirty}
+        <SectionGroup
+          label="Back Matter"
+          sectionType="back"
+          chapters={manuscript.back}
+          activeSection={activeSection}
+          activeSlug={activeSlug}
+          dirty={dirty}
+          onSelect={onSelectChapter}
+        />
+        <SectionGroup
+          label="Floating"
+          sectionType="floating"
+          chapters={manuscript.floating}
+          activeSection={activeSection}
+          activeSlug={activeSlug}
+          dirty={dirty}
         onSelect={onSelectChapter}
       />
     </div>

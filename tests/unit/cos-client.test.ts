@@ -168,10 +168,21 @@ describe('CosClient', () => {
           {
             book_id: 'book-1',
             title: 'My Book',
-            front: { section_type: 'front', chapters: [], metadata: {} },
-            body: { section_type: 'body', chapters: [], metadata: {} },
-            back: { section_type: 'back', chapters: [], metadata: {} },
-            version: 1,
+            front: [],
+            body: [
+              {
+                id: 'chapter-1',
+                slug: 'intro',
+                title: 'Introduction',
+                chapter_kind: 'introduction',
+                status: 'draft',
+                word_count: 1200,
+                has_content: true,
+              },
+            ],
+            back: [],
+            floating: [],
+            structure_version: 1,
             created_at: '2026-01-01',
             updated_at: '2026-01-01',
           },
@@ -190,6 +201,50 @@ describe('CosClient', () => {
           }),
         }),
       )
+    })
+
+    it('returns chapter summaries from the manuscript structure response', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockResponse({
+          book_id: 'book-1',
+          title: 'My Book',
+          front: [],
+          body: [
+            {
+              id: 'chapter-1',
+              slug: 'intro',
+              title: 'Introduction',
+              chapter_kind: 'introduction',
+              status: 'draft',
+              word_count: 1200,
+              has_content: true,
+            },
+          ],
+          back: [],
+          floating: [
+            {
+              id: 'chapter-2',
+              slug: 'sidebar-note',
+              title: 'Sidebar Note',
+              chapter_kind: 'sidebar',
+              status: 'draft',
+              word_count: 200,
+              has_content: false,
+            },
+          ],
+          structure_version: 3,
+          created_at: '2026-01-01',
+          updated_at: '2026-01-02',
+        }),
+      )
+
+      const client = new CosClient('http://localhost:8000', 'default')
+      const manuscript = await client.getManuscript('book-1')
+
+      expect(manuscript.body[0].chapter_kind).toBe('introduction')
+      expect(manuscript.body[0].has_content).toBe(true)
+      expect(manuscript.floating[0].slug).toBe('sidebar-note')
+      expect(manuscript.structure_version).toBe(3)
     })
   })
 

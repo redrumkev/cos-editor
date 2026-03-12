@@ -1,12 +1,16 @@
 // COS API TypeScript types — mirrors FastAPI backend schemas
 
 // Section types
-export type SectionType = 'front' | 'body' | 'back'
+export type SectionType = 'front' | 'body' | 'back' | 'floating'
 
 // Chapter content from GET /manuscripts/{bookId}/chapters/{section}/{slug}
 export interface ChapterContent {
+  id: string
   slug: string
   title: string
+  chapter_kind: string
+  zone: SectionType
+  status: string
   content_draft: string | null
   content_published: string | null
   word_count: number
@@ -57,20 +61,26 @@ export interface InitializeRequest {
   title: string
 }
 
-// Manuscript structure from GET /manuscripts/{bookId}
-export interface BookSection {
-  section_type: SectionType
-  chapters: ChapterContent[]
-  metadata: Record<string, unknown>
+// Chapter summary from GET /manuscripts/{bookId}
+export interface ChapterSummary {
+  id: string
+  slug: string
+  title: string
+  chapter_kind: string
+  status: string
+  word_count: number
+  has_content: boolean
 }
 
+// Manuscript structure from GET /manuscripts/{bookId}
 export interface ManuscriptStructure {
   book_id: string
   title: string
-  front: BookSection
-  body: BookSection
-  back: BookSection
-  version: number
+  front: ChapterSummary[]
+  body: ChapterSummary[]
+  back: ChapterSummary[]
+  floating: ChapterSummary[]
+  structure_version: number
   created_at: string
   updated_at: string
 }

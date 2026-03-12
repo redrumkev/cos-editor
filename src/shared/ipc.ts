@@ -1,3 +1,5 @@
+import type { SectionType } from './cos-types'
+
 // IPC channel constants — single source of truth
 export const IPC = {
   // Buffer operations (renderer -> main)
@@ -55,7 +57,7 @@ export type BufferMode = 'live' | 'draft'
 // Payload types
 export interface BufferOpenRequest {
   bookId: string
-  section: 'front' | 'body' | 'back'
+  section: SectionType
   slug: string
   mode?: BufferMode
 }
@@ -96,7 +98,7 @@ export type ConnectionTestResult = {
 
 export interface NavLoadHistoryRequest {
   bookId: string
-  section: 'front' | 'body' | 'back'
+  section: SectionType
   slug: string
   mode?: BufferMode
 }
@@ -113,14 +115,14 @@ export interface BufferConflict {
 
 export interface NavLoadVersionRequest {
   bookId: string
-  section: 'front' | 'body' | 'back'
+  section: SectionType
   slug: string
   hash: string
 }
 
 export interface NavRestoreVersionRequest {
   bookId: string
-  section: 'front' | 'body' | 'back'
+  section: SectionType
   slug: string
   targetHash: string
   expectedHead?: string | null
