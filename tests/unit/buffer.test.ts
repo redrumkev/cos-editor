@@ -389,7 +389,7 @@ describe('BufferManager', () => {
         response: {
           content_hash: 'accepted-hash',
           word_count: 1,
-          accepted_from_draft_hash: 'draft-hash',
+          accepted_from_sandbox_hash: 'draft-hash',
         },
         contentHash: 'accepted-hash',
       })
@@ -399,7 +399,7 @@ describe('BufferManager', () => {
       const state = await buffer.acceptSandbox('user')
 
       expect(mockClient.acceptSandbox).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID, {
-        expected_draft_head: 'draft-hash',
+        expected_sandbox_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
       })

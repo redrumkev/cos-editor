@@ -229,7 +229,7 @@ export class BufferManager extends EventEmitter {
 
     try {
       const { contentHash } = await this.client.acceptSandbox(this.bookId, this.chapterId, {
-        expected_draft_head: this.headHash,
+        expected_sandbox_head: this.headHash,
         expected_live_head: this.liveHeadHash,
         actor,
       })

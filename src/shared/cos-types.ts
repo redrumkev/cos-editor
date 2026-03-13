@@ -111,7 +111,7 @@ export interface SandboxChapterSummary {
 
 // Accept sandbox request
 export interface AcceptSandboxRequest {
-  expected_draft_head?: string | null
+  expected_sandbox_head?: string | null
   expected_live_head?: string | null
   actor?: string
 }
@@ -120,7 +120,7 @@ export interface AcceptSandboxRequest {
 export interface AcceptSandboxResponse {
   content_hash: string
   word_count: number
-  accepted_from_draft_hash: string
+  accepted_from_sandbox_hash: string
 }
 
 // Write result from save/revert operations

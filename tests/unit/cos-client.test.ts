@@ -564,7 +564,7 @@ describe('CosClient', () => {
           {
             content_hash: 'accepted-hash',
             word_count: 10,
-            accepted_from_draft_hash: 'draft-hash',
+            accepted_from_sandbox_hash: 'draft-hash',
           },
           200,
           { ETag: '"accepted-hash"', 'X-Content-Hash': 'accepted-hash' },
@@ -573,7 +573,7 @@ describe('CosClient', () => {
 
       const client = new CosClient('http://localhost:8000', 'default')
       const result = await client.acceptSandbox(BOOK_ID, CHAPTER_ID, {
-        expected_draft_head: 'draft-hash',
+        expected_sandbox_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
       })
