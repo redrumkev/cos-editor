@@ -169,7 +169,7 @@ export class CosClient {
     return { chapter, contentHash }
   }
 
-  async getDraftChapter(
+  async getSandboxChapter(
     bookId: string,
     chapterId: string,
   ): Promise<{ chapter: ChapterContent; contentHash: string }> {
@@ -227,7 +227,7 @@ export class CosClient {
     })
   }
 
-  async saveDraftChapter(
+  async saveSandboxChapter(
     bookId: string,
     chapterId: string,
     body: SaveChapterRequest,
@@ -271,7 +271,7 @@ export class CosClient {
     })
   }
 
-  async acceptDraft(
+  async acceptSandbox(
     bookId: string,
     chapterId: string,
     body: AcceptDraftRequest = {},
@@ -319,7 +319,7 @@ export class CosClient {
     return this.json<CasHistoryEntry[]>(`/manuscripts/${bookId}/chapters/${chapterId}/history`)
   }
 
-  async getDraftChapterHistory(bookId: string, chapterId: string): Promise<CasHistoryEntry[]> {
+  async getSandboxChapterHistory(bookId: string, chapterId: string): Promise<CasHistoryEntry[]> {
     return this.json<CasHistoryEntry[]>(
       `/manuscripts/${bookId}/chapters/${chapterId}/sandbox/history`,
     )

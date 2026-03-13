@@ -20,9 +20,9 @@ vi.mock('../../src/main/cos-client', () => {
   const mockClient = {
     getChapter: vi.fn(),
     saveChapter: vi.fn(),
-    getDraftChapter: vi.fn(),
-    saveDraftChapter: vi.fn(),
-    acceptDraft: vi.fn(),
+    getSandboxChapter: vi.fn(),
+    saveSandboxChapter: vi.fn(),
+    acceptSandbox: vi.fn(),
     getManuscript: vi.fn(),
     getBook: vi.fn(),
   }
@@ -171,9 +171,9 @@ describe('BufferManager', () => {
     })
   })
 
-  describe('opening in draft mode', () => {
-    it('calls getDraftChapter when mode is draft', async () => {
-      mockClient.getDraftChapter.mockResolvedValueOnce({
+  describe('opening in sandbox mode', () => {
+    it('calls getSandboxChapter when mode is sandbox', async () => {
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
         chapter: {
           id: CHAPTER_ID,
           slug: 'ch-1',
@@ -194,18 +194,18 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
-      expect(mockClient.getDraftChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
+      expect(mockClient.getSandboxChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
       expect(state.content).toBe('# Draft content')
       expect(state.headHash).toBe('draft-hash')
-      expect(state.mode).toBe('draft')
+      expect(state.mode).toBe('sandbox')
       expect(state.liveHeadHash).toBe('live-hash')
     })
 
-    it('falls back to getChapter when draft 404 (seed from live)', async () => {
+    it('falls back to getChapter when sandbox 404 (seed from live)', async () => {
       const { NotFoundError } = await import('../../src/main/cos-client')
-      mockClient.getDraftChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
+      mockClient.getSandboxChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
       // First getChapter call: seed fallback
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
       // Second getChapter call: fetch live head
@@ -215,13 +215,13 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
-      expect(mockClient.getDraftChapter).toHaveBeenCalled()
+      expect(mockClient.getSandboxChapter).toHaveBeenCalled()
       expect(mockClient.getChapter).toHaveBeenCalled()
       expect(state.content).toBe('# Hello World')
-      expect(state.headHash).toBeNull() // New draft, no head
-      expect(state.mode).toBe('draft')
+      expect(state.headHash).toBeNull() // New sandbox stream, no head
+      expect(state.mode).toBe('sandbox')
       expect(state.liveHeadHash).toBe('live-hash')
     })
   })
@@ -291,9 +291,9 @@ describe('BufferManager', () => {
     })
   })
 
-  describe('saving in draft mode', () => {
-    it('calls saveDraftChapter with expected_head', async () => {
-      mockClient.getDraftChapter.mockResolvedValueOnce({
+  describe('saving in sandbox mode', () => {
+    it('calls saveSandboxChapter with expected_head', async () => {
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
         chapter: {
           id: CHAPTER_ID,
           slug: 'ch-1',
@@ -309,7 +309,7 @@ describe('BufferManager', () => {
         contentHash: 'draft-hash',
       })
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
-      mockClient.saveDraftChapter.mockResolvedValueOnce({
+      mockClient.saveSandboxChapter.mockResolvedValueOnce({
         response: {
           content_hash: 'new-draft-hash',
           word_count: 2,
@@ -320,11 +320,11 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
       buffer.applyChanges('# Draft Updated')
       const state = await buffer.save()
 
-      expect(mockClient.saveDraftChapter).toHaveBeenCalledWith(
+      expect(mockClient.saveSandboxChapter).toHaveBeenCalledWith(
         BOOK_ID,
         CHAPTER_ID,
         expect.objectContaining({
@@ -363,9 +363,9 @@ describe('BufferManager', () => {
     })
   })
 
-  describe('acceptDraft', () => {
-    it('calls client.acceptDraft and flips mode to live', async () => {
-      mockClient.getDraftChapter.mockResolvedValueOnce({
+  describe('acceptSandbox', () => {
+    it('calls client.acceptSandbox and flips mode to live', async () => {
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
         chapter: {
           id: CHAPTER_ID,
           slug: 'ch-1',
@@ -384,7 +384,7 @@ describe('BufferManager', () => {
         ...CHAPTER_RESPONSE,
         contentHash: 'live-hash',
       })
-      mockClient.acceptDraft.mockResolvedValueOnce({
+      mockClient.acceptSandbox.mockResolvedValueOnce({
         response: {
           content_hash: 'accepted-hash',
           word_count: 1,
@@ -394,10 +394,10 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
-      const state = await buffer.acceptDraft('user')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
+      const state = await buffer.acceptSandbox('user')
 
-      expect(mockClient.acceptDraft).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID, {
+      expect(mockClient.acceptSandbox).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID, {
         expected_draft_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
@@ -407,32 +407,32 @@ describe('BufferManager', () => {
       expect(state.liveHeadHash).toBe('accepted-hash')
     })
 
-    it('throws when not in draft mode', async () => {
+    it('throws when not in sandbox mode', async () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
       await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
-      await expect(buffer.acceptDraft('user')).rejects.toThrow('not in draft mode')
+      await expect(buffer.acceptSandbox('user')).rejects.toThrow('not in sandbox mode')
     })
 
-    it('throws when no draft head hash', async () => {
+    it('throws when no sandbox head hash', async () => {
       const { NotFoundError } = await import('../../src/main/cos-client')
-      mockClient.getDraftChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
+      mockClient.getSandboxChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
       mockClient.getChapter
         .mockResolvedValueOnce(CHAPTER_RESPONSE)
         .mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
-      // headHash is null for a new draft
-      await expect(buffer.acceptDraft('user')).rejects.toThrow('no draft head hash')
+      // headHash is null for a new sandbox stream
+      await expect(buffer.acceptSandbox('user')).rejects.toThrow('no sandbox head hash')
     })
 
     it('emits conflict on 409 during accept', async () => {
       const { ConcurrentModificationError } = await import('../../src/main/cos-client')
-      mockClient.getDraftChapter.mockResolvedValueOnce({
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
         chapter: {
           id: CHAPTER_ID,
           slug: 'ch-1',
@@ -448,17 +448,17 @@ describe('BufferManager', () => {
         contentHash: 'draft-hash',
       })
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
-      mockClient.acceptDraft.mockRejectedValueOnce(
+      mockClient.acceptSandbox.mockRejectedValueOnce(
         new ConcurrentModificationError('Accept conflict'),
       )
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
       const conflictHandler = vi.fn()
       buffer.on('conflict', conflictHandler)
 
-      await buffer.acceptDraft('user')
+      await buffer.acceptSandbox('user')
 
       expect(conflictHandler).toHaveBeenCalledTimes(1)
       expect(conflictHandler.mock.calls[0][0].operation).toBe('accept')

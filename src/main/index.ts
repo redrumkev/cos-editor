@@ -10,7 +10,7 @@ import type {
 } from '../shared/cos-types'
 import type {
   AppCommand,
-  BufferAcceptDraftRequest,
+  BufferAcceptSandboxRequest,
   BufferApplyChangesRequest,
   BufferConflict,
   BufferOpenRequest,
@@ -227,7 +227,7 @@ function buildAppMenu(): Electron.Menu {
         },
         { type: 'separator' },
         {
-          label: 'Toggle Live/Draft',
+          label: 'Toggle Live/Sandbox',
           accelerator: 'CmdOrCtrl+D',
           click: () => sendCommand({ type: 'toggle-buffer-mode' }),
         },
@@ -301,8 +301,8 @@ function registerIpcHandlers(): void {
     return buffer.forceSave()
   })
 
-  ipcMain.handle(IPC.BUFFER_ACCEPT_DRAFT, async (_event, req: BufferAcceptDraftRequest) => {
-    return buffer.acceptDraft(req.actor ?? 'user')
+  ipcMain.handle(IPC.BUFFER_ACCEPT_SANDBOX, async (_event, req: BufferAcceptSandboxRequest) => {
+    return buffer.acceptSandbox(req.actor ?? 'user')
   })
 
   // Settings
@@ -356,8 +356,8 @@ function registerIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC.NAV_LOAD_HISTORY, async (_event, req: NavLoadHistoryRequest) => {
-    if (req.mode === 'draft') {
-      return cosClient.getDraftChapterHistory(req.bookId, req.chapterId)
+    if (req.mode === 'sandbox') {
+      return cosClient.getSandboxChapterHistory(req.bookId, req.chapterId)
     }
     return cosClient.getChapterHistory(req.bookId, req.chapterId)
   })

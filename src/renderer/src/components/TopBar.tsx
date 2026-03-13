@@ -9,8 +9,8 @@ interface TopBarProps {
   onSelectBook: (book: BookRecord) => void
   bufferMode: BufferMode
   onBufferModeChange: (mode: BufferMode) => void
-  canAcceptDraft: boolean
-  onAcceptDraft: () => void
+  canAcceptSandbox: boolean
+  onAcceptSandbox: () => void
   captureOpen: boolean
   onToggleCapture: () => void
 }
@@ -22,8 +22,8 @@ export function TopBar({
   onSelectBook,
   bufferMode,
   onBufferModeChange,
-  canAcceptDraft,
-  onAcceptDraft,
+  canAcceptSandbox,
+  onAcceptSandbox,
   captureOpen,
   onToggleCapture,
 }: TopBarProps): React.JSX.Element {
@@ -38,12 +38,12 @@ export function TopBar({
         connected={cosStatus.connected}
       />
       <div className="flex items-center gap-3">
-        {/* Live / Draft toggle */}
+        {/* Live / Sandbox toggle */}
         <div className="relative flex items-center overflow-hidden rounded-md border border-border bg-bg shadow-sm text-xs">
           <span
             aria-hidden="true"
             className={`pointer-events-none absolute inset-y-0 left-0 m-0.5 w-[calc(50%-2px)] rounded-[5px] bg-accent/20 transition-transform duration-[--duration-normal] [transition-timing-function:var(--ease-default)] ${
-              bufferMode === 'draft' ? 'translate-x-full' : ''
+              bufferMode === 'sandbox' ? 'translate-x-full' : ''
             }`}
           />
           <button
@@ -59,24 +59,24 @@ export function TopBar({
           </button>
           <button
             type="button"
-            onClick={() => onBufferModeChange('draft')}
+            onClick={() => onBufferModeChange('sandbox')}
             className={`relative z-10 px-2.5 py-1 transition-colors duration-[--duration-normal] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
-              bufferMode === 'draft'
+              bufferMode === 'sandbox'
                 ? 'text-accent font-medium'
                 : 'text-text-muted hover:bg-bg-overlay hover:text-text'
             }`}
           >
-            Draft
+            Sandbox
           </button>
         </div>
-        {/* Accept Draft button */}
+        {/* Accept Sandbox button */}
         <button
           type="button"
-          onClick={onAcceptDraft}
-          disabled={!canAcceptDraft}
+          onClick={onAcceptSandbox}
+          disabled={!canAcceptSandbox}
           className={`${buttonBaseClass} border-border text-success hover:bg-success/10 disabled:opacity-40 disabled:cursor-not-allowed`}
         >
-          Accept Draft
+          Accept Sandbox
         </button>
         {/* Capture toggle */}
         <button

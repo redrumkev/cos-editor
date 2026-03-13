@@ -15,7 +15,7 @@ import type {
 } from '../shared/cos-types'
 import type {
   AppCommand,
-  BufferAcceptDraftRequest,
+  BufferAcceptSandboxRequest,
   BufferApplyChangesRequest,
   BufferConflict,
   BufferOpenRequest,
@@ -45,8 +45,8 @@ const cosEditorApi = {
 
   forceSave: (): Promise<BufferState> => ipcRenderer.invoke(IPC.BUFFER_FORCE_SAVE),
 
-  acceptDraft: (req: BufferAcceptDraftRequest): Promise<BufferState> =>
-    ipcRenderer.invoke(IPC.BUFFER_ACCEPT_DRAFT, req),
+  acceptSandbox: (req: BufferAcceptSandboxRequest): Promise<BufferState> =>
+    ipcRenderer.invoke(IPC.BUFFER_ACCEPT_SANDBOX, req),
 
   // Settings
   getSettings: (): Promise<Settings> => ipcRenderer.invoke(IPC.SETTINGS_GET),

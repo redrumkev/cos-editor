@@ -16,7 +16,7 @@ export function ConflictDialog({
 }: ConflictDialogProps): React.JSX.Element {
   const closeAnimationMs = 250
   const title = conflict.operation === 'accept' ? 'Accept Conflict' : 'Save Conflict'
-  const modeLabel = conflict.mode === 'draft' ? 'Draft' : 'Live'
+  const modeLabel = conflict.mode === 'sandbox' ? 'Sandbox' : 'Live'
   const panelRef = useRef<HTMLDivElement>(null)
   const closeTimeoutRef = useRef<number | null>(null)
   const [isClosing, setIsClosing] = useState(false)

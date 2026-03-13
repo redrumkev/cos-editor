@@ -93,8 +93,8 @@ export interface CasHistoryEntry {
   metadata: Record<string, unknown>
 }
 
-// Draft chapter summary
-export interface DraftChapterSummary {
+// Sandbox chapter summary
+export interface SandboxChapterSummary {
   slug: string
   title: string
   word_count: number

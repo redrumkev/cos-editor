@@ -490,8 +490,8 @@ describe('CosClient', () => {
     })
   })
 
-  describe('getDraftChapter', () => {
-    it('constructs correct URL with /drafts/chapters/ path', async () => {
+  describe('getSandboxChapter', () => {
+    it('constructs correct URL with /chapters/{id}/sandbox path', async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
@@ -512,7 +512,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getDraftChapter(BOOK_ID, CHAPTER_ID)
+      const result = await client.getSandboxChapter(BOOK_ID, CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
         `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox`,
@@ -525,7 +525,7 @@ describe('CosClient', () => {
     })
   })
 
-  describe('saveDraftChapter', () => {
+  describe('saveSandboxChapter', () => {
     it('constructs correct URL and sends expected_head in body', async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
@@ -541,7 +541,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.saveDraftChapter(BOOK_ID, CHAPTER_ID, {
+      await client.saveSandboxChapter(BOOK_ID, CHAPTER_ID, {
         title: 'Chapter 1',
         content_draft: '# Updated draft',
         expected_head: 'draft-hash',
@@ -557,7 +557,7 @@ describe('CosClient', () => {
     })
   })
 
-  describe('acceptDraft', () => {
+  describe('acceptSandbox', () => {
     it('constructs correct URL and extracts hash from response', async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
@@ -572,7 +572,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.acceptDraft(BOOK_ID, CHAPTER_ID, {
+      const result = await client.acceptSandbox(BOOK_ID, CHAPTER_ID, {
         expected_draft_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
@@ -586,14 +586,14 @@ describe('CosClient', () => {
     })
   })
 
-  describe('getDraftChapterHistory', () => {
-    it('constructs correct URL with /drafts/chapters/ path', async () => {
+  describe('getSandboxChapterHistory', () => {
+    it('constructs correct URL with /chapters/{id}/sandbox/history path', async () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse([{ hash: 'h1', parent_hash: null, created_at: '2026-01-01', metadata: {} }]),
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.getDraftChapterHistory(BOOK_ID, CHAPTER_ID)
+      await client.getSandboxChapterHistory(BOOK_ID, CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
         `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox/history`,

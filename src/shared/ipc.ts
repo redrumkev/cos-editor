@@ -8,7 +8,7 @@ export const IPC = {
   BUFFER_APPLY_CHANGES: 'buffer:apply-changes',
   BUFFER_RELOAD: 'buffer:reload',
   BUFFER_FORCE_SAVE: 'buffer:force-save',
-  BUFFER_ACCEPT_DRAFT: 'buffer:accept-draft',
+  BUFFER_ACCEPT_SANDBOX: 'buffer:accept-sandbox',
 
   // Settings (renderer -> main)
   SETTINGS_GET: 'settings:get',
@@ -52,7 +52,7 @@ export type AppCommand =
   | { type: 'toggle-preview' }
 
 // Buffer mode
-export type BufferMode = 'live' | 'draft'
+export type BufferMode = 'live' | 'sandbox'
 
 // Payload types
 export interface BufferOpenRequest {
@@ -106,7 +106,7 @@ export interface NavLoadHistoryRequest {
   mode?: BufferMode
 }
 
-export interface BufferAcceptDraftRequest {
+export interface BufferAcceptSandboxRequest {
   actor?: string
 }
 

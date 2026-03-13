@@ -349,7 +349,7 @@ function App(): React.JSX.Element {
           setCaptureOpen((v) => !v)
           break
         case 'toggle-buffer-mode':
-          handleBufferModeChangeRef.current(bufferModeRef.current === 'live' ? 'draft' : 'live')
+          handleBufferModeChangeRef.current(bufferModeRef.current === 'live' ? 'sandbox' : 'live')
           break
         case 'open-command-palette':
           setCommandPaletteOpen(true)
@@ -444,12 +444,12 @@ function App(): React.JSX.Element {
     }
   }, [leftPaneOpen, captureOpen, activeTab, selectedBook, bufferState])
 
-  const handleAcceptDraft = useCallback(() => {
+  const handleAcceptSandbox = useCallback(() => {
     if (!bufferState) return
 
     const doAccept = (): void => {
       window.cosEditor
-        .acceptDraft({ actor: 'user' })
+        .acceptSandbox({ actor: 'user' })
         .then(() => {
           setBufferMode('live')
         })
@@ -572,8 +572,8 @@ function App(): React.JSX.Element {
     window.cosEditor.applyChanges({ content: resultContent }).catch(console.error)
   }, [])
 
-  const canAcceptDraft =
-    bufferMode === 'draft' &&
+  const canAcceptSandbox =
+    bufferMode === 'sandbox' &&
     bufferState !== null &&
     !bufferState.dirty &&
     bufferState.headHash !== null
@@ -587,8 +587,8 @@ function App(): React.JSX.Element {
         onSelectBook={handleSelectBook}
         bufferMode={bufferMode}
         onBufferModeChange={handleBufferModeChange}
-        canAcceptDraft={canAcceptDraft}
-        onAcceptDraft={handleAcceptDraft}
+        canAcceptSandbox={canAcceptSandbox}
+        onAcceptSandbox={handleAcceptSandbox}
         captureOpen={captureOpen}
         onToggleCapture={handleToggleCapture}
       />
@@ -691,13 +691,13 @@ function App(): React.JSX.Element {
         onClose={() => setCommandPaletteOpen(false)}
         onSave={() => window.cosEditor.saveNow()}
         onForceSave={() => window.cosEditor.forceSave()}
-        onToggleMode={() => handleBufferModeChange(bufferMode === 'live' ? 'draft' : 'live')}
+        onToggleMode={() => handleBufferModeChange(bufferMode === 'live' ? 'sandbox' : 'live')}
         onToggleLeftPane={() => setLeftPaneOpen((v) => !v)}
         onToggleCapturePane={() => setCaptureOpen((v) => !v)}
         onTogglePreview={() => setShowPreview((v) => !v)}
         onOpenSettings={() => setSettingsOpen(true)}
-        canAcceptDraft={canAcceptDraft}
-        onAcceptDraft={handleAcceptDraft}
+        canAcceptSandbox={canAcceptSandbox}
+        onAcceptSandbox={handleAcceptSandbox}
       />
     </div>
   )

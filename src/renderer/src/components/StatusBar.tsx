@@ -102,7 +102,7 @@ function SaveStatus({ bufferState }: { bufferState: BufferState | null }): React
 }
 
 export function StatusBar({ bufferState, historyLength }: StatusBarProps): React.JSX.Element {
-  const modeTag = bufferState ? (bufferState.mode === 'draft' ? ' (draft)' : ' (live)') : ''
+  const modeTag = bufferState ? (bufferState.mode === 'sandbox' ? ' (sandbox)' : ' (live)') : ''
   const chapterLabel = bufferState ? `${bufferState.section}/${bufferState.slug}${modeTag}` : '--'
   const wordCount = bufferState?.wordCount ?? 0
 

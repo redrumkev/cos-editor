@@ -8,7 +8,7 @@ describe('IPC channels', () => {
     expect(IPC.BUFFER_APPLY_CHANGES).toBe('buffer:apply-changes')
     expect(IPC.BUFFER_RELOAD).toBe('buffer:reload')
     expect(IPC.BUFFER_FORCE_SAVE).toBe('buffer:force-save')
-    expect(IPC.BUFFER_ACCEPT_DRAFT).toBe('buffer:accept-draft')
+    expect(IPC.BUFFER_ACCEPT_SANDBOX).toBe('buffer:accept-sandbox')
     expect(IPC.SETTINGS_GET).toBe('settings:get')
     expect(IPC.SETTINGS_SET).toBe('settings:set')
     expect(IPC.SETTINGS_TEST_CONNECTION).toBe('settings:test-connection')

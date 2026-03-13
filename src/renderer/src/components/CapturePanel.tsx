@@ -154,7 +154,7 @@ export function CapturePanel({
                     onClick={() => onApplyResult(result.result.content)}
                     className={primaryButtonClass}
                   >
-                    Apply to Draft
+                    Apply to Sandbox
                   </button>
                 )}
               </div>

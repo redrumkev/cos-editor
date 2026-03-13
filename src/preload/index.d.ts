@@ -13,7 +13,7 @@ import type {
   WriteResult,
 } from '../shared/cos-types'
 import type {
-  BufferAcceptDraftRequest,
+  BufferAcceptSandboxRequest,
   BufferApplyChangesRequest,
   BufferConflict,
   BufferOpenRequest,
@@ -34,7 +34,7 @@ interface CosEditorAPI {
   saveNow: () => Promise<BufferState>
   reloadBuffer: () => Promise<BufferState>
   forceSave: () => Promise<BufferState>
-  acceptDraft: (req: BufferAcceptDraftRequest) => Promise<BufferState>
+  acceptSandbox: (req: BufferAcceptSandboxRequest) => Promise<BufferState>
 
   // Settings
   getSettings: () => Promise<Settings>

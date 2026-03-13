@@ -58,25 +58,25 @@ export class BufferManager extends EventEmitter {
 
     this.mode = mode
 
-    if (mode === 'draft') {
-      // Draft mode: try draft endpoint, fallback to live (seed from live)
+    if (mode === 'sandbox') {
+      // Sandbox mode: try sandbox endpoint, fallback to live (seed from live)
       try {
-        const { chapter, contentHash } = await this.client.getDraftChapter(bookId, chapterId)
+        const { chapter, contentHash } = await this.client.getSandboxChapter(bookId, chapterId)
         this.content = chapter.content_draft ?? chapter.content_published ?? ''
         this.title = chapter.title
         this.headHash = contentHash || null
       } catch (err) {
         if (err instanceof NotFoundError) {
-          // No draft exists yet — seed from live
+          // No sandbox content exists yet — seed from live
           const { chapter } = await this.client.getChapter(bookId, chapterId)
           this.content = chapter.content_draft ?? chapter.content_published ?? ''
           this.title = chapter.title
-          this.headHash = null // New draft, no head yet
+          this.headHash = null // New sandbox stream, no head yet
         } else {
           throw err
         }
       }
-      // Also fetch live head for accept CAS
+      // Also fetch live head for sandbox accept
       try {
         const { contentHash: liveHash } = await this.client.getChapter(bookId, chapterId)
         this.liveHeadHash = liveHash || null
@@ -135,8 +135,8 @@ export class BufferManager extends EventEmitter {
       }
 
       let contentHash: string
-      if (this.mode === 'draft') {
-        const result = await this.client.saveDraftChapter(this.bookId, this.chapterId, saveBody)
+      if (this.mode === 'sandbox') {
+        const result = await this.client.saveSandboxChapter(this.bookId, this.chapterId, saveBody)
         contentHash = result.contentHash
       } else {
         const result = await this.client.saveChapter(this.bookId, this.chapterId, saveBody)
@@ -178,9 +178,9 @@ export class BufferManager extends EventEmitter {
 
     this.clearAutosave()
 
-    if (this.mode === 'draft') {
+    if (this.mode === 'sandbox') {
       try {
-        const { chapter, contentHash } = await this.client.getDraftChapter(
+        const { chapter, contentHash } = await this.client.getSandboxChapter(
           this.bookId,
           this.chapterId,
         )
@@ -226,9 +226,9 @@ export class BufferManager extends EventEmitter {
     }
 
     // Fetch latest head hash without overwriting content
-    if (this.mode === 'draft') {
+    if (this.mode === 'sandbox') {
       try {
-        const { contentHash } = await this.client.getDraftChapter(this.bookId, this.chapterId)
+        const { contentHash } = await this.client.getSandboxChapter(this.bookId, this.chapterId)
         this.headHash = contentHash || null
       } catch (err) {
         if (err instanceof NotFoundError) {
@@ -246,19 +246,19 @@ export class BufferManager extends EventEmitter {
     return this.save()
   }
 
-  async acceptDraft(actor = 'user'): Promise<BufferState> {
+  async acceptSandbox(actor = 'user'): Promise<BufferState> {
     if (!this.bookId || !this.chapterId || !this.section || !this.slug) {
       throw new Error('No buffer is open')
     }
-    if (this.mode !== 'draft') {
-      throw new Error('Cannot accept draft: not in draft mode')
+    if (this.mode !== 'sandbox') {
+      throw new Error('Cannot accept sandbox: not in sandbox mode')
     }
     if (this.headHash === null) {
-      throw new Error('Cannot accept draft: no draft head hash')
+      throw new Error('Cannot accept sandbox: no sandbox head hash')
     }
 
     try {
-      const { contentHash } = await this.client.acceptDraft(this.bookId, this.chapterId, {
+      const { contentHash } = await this.client.acceptSandbox(this.bookId, this.chapterId, {
         expected_draft_head: this.headHash,
         expected_live_head: this.liveHeadHash,
         actor,

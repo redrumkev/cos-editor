@@ -18,8 +18,8 @@ interface CommandPaletteProps {
   onToggleCapturePane: () => void
   onOpenSettings: () => void
   onTogglePreview: () => void
-  canAcceptDraft: boolean
-  onAcceptDraft: () => void
+  canAcceptSandbox: boolean
+  onAcceptSandbox: () => void
 }
 
 export function CommandPalette({
@@ -32,8 +32,8 @@ export function CommandPalette({
   onToggleCapturePane,
   onOpenSettings,
   onTogglePreview,
-  canAcceptDraft,
-  onAcceptDraft,
+  canAcceptSandbox,
+  onAcceptSandbox,
 }: CommandPaletteProps): React.JSX.Element | null {
   const closeAnimationMs = 250
   const [query, setQuery] = useState('')
@@ -49,15 +49,15 @@ export function CommandPalette({
       { id: 'force-save', title: 'Force Save', shortcut: '\u2318\u21e7S', action: onForceSave },
       {
         id: 'toggle-mode',
-        title: 'Toggle Live/Draft Mode',
+        title: 'Toggle Live/Sandbox Mode',
         shortcut: '\u2318D',
         action: onToggleMode,
       },
       {
-        id: 'accept-draft',
-        title: 'Accept Draft',
-        action: onAcceptDraft,
-        enabled: canAcceptDraft,
+        id: 'accept-sandbox',
+        title: 'Accept Sandbox',
+        action: onAcceptSandbox,
+        enabled: canAcceptSandbox,
       },
       {
         id: 'toggle-left-pane',
@@ -83,8 +83,8 @@ export function CommandPalette({
       onSave,
       onForceSave,
       onToggleMode,
-      onAcceptDraft,
-      canAcceptDraft,
+      onAcceptSandbox,
+      canAcceptSandbox,
       onToggleLeftPane,
       onToggleCapturePane,
       onTogglePreview,
