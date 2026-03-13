@@ -9,14 +9,6 @@ vi.mock('../../src/main/cos-client', () => {
       this.name = 'ConcurrentModificationError'
     }
   }
-  class MockNotFoundError extends Error {
-    statusCode = 404
-    constructor(message: string) {
-      super(message)
-      this.name = 'NotFoundError'
-    }
-  }
-
   const mockClient = {
     getChapter: vi.fn(),
     saveChapter: vi.fn(),
@@ -30,7 +22,6 @@ vi.mock('../../src/main/cos-client', () => {
     CosClient: vi.fn(() => mockClient),
     CosClientError: class extends Error {},
     ConcurrentModificationError: MockConcurrentModificationError,
-    NotFoundError: MockNotFoundError,
     __mockClient: mockClient,
   }
 })
@@ -203,12 +194,22 @@ describe('BufferManager', () => {
       expect(state.liveHeadHash).toBe('live-hash')
     })
 
-    it('falls back to getChapter when sandbox 404 (seed from live)', async () => {
-      const { NotFoundError } = await import('../../src/main/cos-client')
-      mockClient.getSandboxChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
-      // First getChapter call: seed fallback
-      mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
-      // Second getChapter call: fetch live head
+    it('uses sandbox content only and reads live separately for accept guards', async () => {
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
+        chapter: {
+          id: CHAPTER_ID,
+          slug: 'ch-1',
+          title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
+          content_draft: '# Sandbox stream',
+          content_published: null,
+          word_count: 2,
+          metadata: {},
+        },
+        contentHash: '',
+      })
       mockClient.getChapter.mockResolvedValueOnce({
         ...CHAPTER_RESPONSE,
         contentHash: 'live-hash',
@@ -217,10 +218,10 @@ describe('BufferManager', () => {
       const buffer = new BufferManager(mockClient)
       const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
-      expect(mockClient.getSandboxChapter).toHaveBeenCalled()
-      expect(mockClient.getChapter).toHaveBeenCalled()
-      expect(state.content).toBe('# Hello World')
-      expect(state.headHash).toBeNull() // New sandbox stream, no head
+      expect(mockClient.getSandboxChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
+      expect(mockClient.getChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
+      expect(state.content).toBe('# Sandbox stream')
+      expect(state.headHash).toBeNull()
       expect(state.mode).toBe('sandbox')
       expect(state.liveHeadHash).toBe('live-hash')
     })
@@ -417,16 +418,26 @@ describe('BufferManager', () => {
     })
 
     it('throws when no sandbox head hash', async () => {
-      const { NotFoundError } = await import('../../src/main/cos-client')
-      mockClient.getSandboxChapter.mockRejectedValueOnce(new NotFoundError('Not found'))
-      mockClient.getChapter
-        .mockResolvedValueOnce(CHAPTER_RESPONSE)
-        .mockResolvedValueOnce(CHAPTER_RESPONSE)
+      mockClient.getSandboxChapter.mockResolvedValueOnce({
+        chapter: {
+          id: CHAPTER_ID,
+          slug: 'ch-1',
+          title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
+          content_draft: '# Draft',
+          content_published: null,
+          word_count: 1,
+          metadata: {},
+        },
+        contentHash: '',
+      })
+      mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
       await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'sandbox')
 
-      // headHash is null for a new sandbox stream
       await expect(buffer.acceptSandbox('user')).rejects.toThrow('no sandbox head hash')
     })
 

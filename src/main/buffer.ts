@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import type { SectionType } from '../shared/cos-types'
 import type { BufferConflict, BufferMode, BufferState } from '../shared/ipc'
 import type { CosClient } from './cos-client'
-import { ConcurrentModificationError, NotFoundError } from './cos-client'
+import { ConcurrentModificationError } from './cos-client'
 
 const AUTOSAVE_DELAY_MS = 3000
 
@@ -59,24 +59,12 @@ export class BufferManager extends EventEmitter {
     this.mode = mode
 
     if (mode === 'sandbox') {
-      // Sandbox mode: try sandbox endpoint, fallback to live (seed from live)
-      try {
-        const { chapter, contentHash } = await this.client.getSandboxChapter(bookId, chapterId)
-        this.content = chapter.content_draft ?? chapter.content_published ?? ''
-        this.title = chapter.title
-        this.headHash = contentHash || null
-      } catch (err) {
-        if (err instanceof NotFoundError) {
-          // No sandbox content exists yet — seed from live
-          const { chapter } = await this.client.getChapter(bookId, chapterId)
-          this.content = chapter.content_draft ?? chapter.content_published ?? ''
-          this.title = chapter.title
-          this.headHash = null // New sandbox stream, no head yet
-        } else {
-          throw err
-        }
-      }
-      // Also fetch live head for sandbox accept
+      const { chapter, contentHash } = await this.client.getSandboxChapter(bookId, chapterId)
+      this.content = chapter.content_draft ?? chapter.content_published ?? ''
+      this.title = chapter.title
+      this.headHash = contentHash || null
+
+      // Fetch live head separately so sandbox accept can guard against concurrent live edits.
       try {
         const { contentHash: liveHash } = await this.client.getChapter(bookId, chapterId)
         this.liveHeadHash = liveHash || null
@@ -179,25 +167,15 @@ export class BufferManager extends EventEmitter {
     this.clearAutosave()
 
     if (this.mode === 'sandbox') {
-      try {
-        const { chapter, contentHash } = await this.client.getSandboxChapter(
-          this.bookId,
-          this.chapterId,
-        )
-        this.content = chapter.content_draft ?? chapter.content_published ?? ''
-        this.title = chapter.title
-        this.headHash = contentHash || null
-      } catch (err) {
-        if (err instanceof NotFoundError) {
-          const { chapter } = await this.client.getChapter(this.bookId, this.chapterId)
-          this.content = chapter.content_draft ?? chapter.content_published ?? ''
-          this.title = chapter.title
-          this.headHash = null
-        } else {
-          throw err
-        }
-      }
-      // Refresh live head
+      const { chapter, contentHash } = await this.client.getSandboxChapter(
+        this.bookId,
+        this.chapterId,
+      )
+      this.content = chapter.content_draft ?? chapter.content_published ?? ''
+      this.title = chapter.title
+      this.headHash = contentHash || null
+
+      // Refresh live head for sandbox accept conflict checks.
       try {
         const { contentHash: liveHash } = await this.client.getChapter(this.bookId, this.chapterId)
         this.liveHeadHash = liveHash || null
@@ -227,16 +205,8 @@ export class BufferManager extends EventEmitter {
 
     // Fetch latest head hash without overwriting content
     if (this.mode === 'sandbox') {
-      try {
-        const { contentHash } = await this.client.getSandboxChapter(this.bookId, this.chapterId)
-        this.headHash = contentHash || null
-      } catch (err) {
-        if (err instanceof NotFoundError) {
-          this.headHash = null
-        } else {
-          throw err
-        }
-      }
+      const { contentHash } = await this.client.getSandboxChapter(this.bookId, this.chapterId)
+      this.headHash = contentHash || null
     } else {
       const { contentHash } = await this.client.getChapter(this.bookId, this.chapterId)
       this.headHash = contentHash || null

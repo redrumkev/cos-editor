@@ -1,16 +1,24 @@
-// COS API TypeScript types — mirrors FastAPI backend schemas
+// COS API TypeScript types — mirrors FastAPI backend schemas.
+//
+// Terminology boundaries:
+// - zone/section: structural placement inside the manuscript tree
+// - chapter_kind: semantic role of the chapter
+// - chapter status: workflow lifecycle, not editor buffer mode
+// - sandbox/live: editor stream selection, defined in shared/ipc.ts
 
-// Section types
-export type SectionType = 'front' | 'body' | 'back' | 'floating'
+export type ChapterZone = 'front' | 'body' | 'back' | 'floating'
+export type SectionType = ChapterZone
+export type ChapterKind = string
+export type ChapterWorkflowStatus = 'draft' | 'review' | 'promoted' | 'locked'
 
-// Chapter content from GET /manuscripts/{bookId}/chapters/{section}/{slug}
+// Chapter content from GET /manuscripts/{bookId}/chapters/{chapterId}
 export interface ChapterContent {
   id: string
   slug: string
   title: string
-  chapter_kind: string
-  zone: SectionType
-  status: string
+  chapter_kind: ChapterKind
+  zone: ChapterZone
+  status: ChapterWorkflowStatus
   content_draft: string | null
   content_published: string | null
   word_count: number
@@ -66,8 +74,8 @@ export interface ChapterSummary {
   id: string
   slug: string
   title: string
-  chapter_kind: string
-  status: string
+  chapter_kind: ChapterKind
+  status: ChapterWorkflowStatus
   word_count: number
   has_content: boolean
 }

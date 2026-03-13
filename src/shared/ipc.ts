@@ -52,6 +52,8 @@ export type AppCommand =
   | { type: 'toggle-preview' }
 
 // Buffer mode
+// BufferMode selects which stream the editor is reading/writing.
+// It is distinct from chapter workflow status in shared/cos-types.ts.
 export type BufferMode = 'live' | 'sandbox'
 
 // Payload types
