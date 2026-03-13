@@ -1,6 +1,6 @@
 import type {
-  AcceptDraftRequest,
-  AcceptDraftResponse,
+  AcceptSandboxRequest,
+  AcceptSandboxResponse,
   BookRecord,
   CaptureCreateRequest,
   CaptureItem,
@@ -274,13 +274,13 @@ export class CosClient {
   async acceptSandbox(
     bookId: string,
     chapterId: string,
-    body: AcceptDraftRequest = {},
-  ): Promise<{ response: AcceptDraftResponse; contentHash: string }> {
+    body: AcceptSandboxRequest = {},
+  ): Promise<{ response: AcceptSandboxResponse; contentHash: string }> {
     const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox/accept`, {
       method: 'POST',
       body: JSON.stringify(body),
     })
-    const response = (await res.json()) as AcceptDraftResponse
+    const response = (await res.json()) as AcceptSandboxResponse
 
     let contentHash = response.content_hash
     const etag = res.headers.get('ETag')

@@ -101,15 +101,15 @@ export interface SandboxChapterSummary {
   has_content: boolean
 }
 
-// Accept draft request
-export interface AcceptDraftRequest {
+// Accept sandbox request
+export interface AcceptSandboxRequest {
   expected_draft_head?: string | null
   expected_live_head?: string | null
   actor?: string
 }
 
-// Accept draft response
-export interface AcceptDraftResponse {
+// Accept sandbox response
+export interface AcceptSandboxResponse {
   content_hash: string
   word_count: number
   accepted_from_draft_hash: string
