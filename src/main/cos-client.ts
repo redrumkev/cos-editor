@@ -151,10 +151,9 @@ export class CosClient {
 
   async getChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
   ): Promise<{ chapter: ChapterContent; contentHash: string }> {
-    const res = await this.request(`/manuscripts/${bookId}/chapters/${section}/${slug}`)
+    const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}`)
     const chapter = (await res.json()) as ChapterContent
 
     let contentHash = ''
@@ -172,10 +171,9 @@ export class CosClient {
 
   async getDraftChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
   ): Promise<{ chapter: ChapterContent; contentHash: string }> {
-    const res = await this.request(`/manuscripts/${bookId}/drafts/chapters/${section}/${slug}`)
+    const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox`)
     const chapter = (await res.json()) as ChapterContent
 
     let contentHash = ''
@@ -193,11 +191,10 @@ export class CosClient {
 
   async getChapterAtHash(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     hash: string,
   ): Promise<{ chapter: ChapterContent; contentHash: string }> {
-    const res = await this.request(`/manuscripts/${bookId}/chapters/${section}/${slug}/at/${hash}`)
+    const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}/at/${hash}`)
     const chapter = (await res.json()) as ChapterContent
 
     let contentHash = hash
@@ -221,11 +218,10 @@ export class CosClient {
 
   async saveChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: SaveChapterRequest,
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/chapters/${section}/${slug}`, {
+    return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     })
@@ -233,11 +229,10 @@ export class CosClient {
 
   async saveDraftChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: SaveChapterRequest,
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/drafts/chapters/${section}/${slug}`, {
+    return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox`, {
       method: 'PUT',
       body: JSON.stringify(body),
     })
@@ -245,11 +240,10 @@ export class CosClient {
 
   async deleteChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: DeleteChapterRequest = {},
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/chapters/${section}/${slug}`, {
+    return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}`, {
       method: 'DELETE',
       body: JSON.stringify(body),
     })
@@ -257,11 +251,10 @@ export class CosClient {
 
   async publishChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: PublishChapterRequest = {},
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/chapters/${section}/${slug}/publish`, {
+    return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}/publish`, {
       method: 'POST',
       body: JSON.stringify(body),
     })
@@ -269,11 +262,10 @@ export class CosClient {
 
   async revertChapter(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: RevertRequest,
   ): Promise<WriteResult> {
-    return this.writeRequest(`/manuscripts/${bookId}/chapters/${section}/${slug}/revert`, {
+    return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}/revert`, {
       method: 'POST',
       body: JSON.stringify(body),
     })
@@ -281,17 +273,13 @@ export class CosClient {
 
   async acceptDraft(
     bookId: string,
-    section: SectionType,
-    slug: string,
+    chapterId: string,
     body: AcceptDraftRequest = {},
   ): Promise<{ response: AcceptDraftResponse; contentHash: string }> {
-    const res = await this.request(
-      `/manuscripts/${bookId}/drafts/chapters/${section}/${slug}/accept`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      },
-    )
+    const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox/accept`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
     const response = (await res.json()) as AcceptDraftResponse
 
     let contentHash = response.content_hash
@@ -327,23 +315,13 @@ export class CosClient {
 
   // --- HISTORY endpoints ---
 
-  async getChapterHistory(
-    bookId: string,
-    section: SectionType,
-    slug: string,
-  ): Promise<CasHistoryEntry[]> {
-    return this.json<CasHistoryEntry[]>(
-      `/manuscripts/${bookId}/chapters/${section}/${slug}/history`,
-    )
+  async getChapterHistory(bookId: string, chapterId: string): Promise<CasHistoryEntry[]> {
+    return this.json<CasHistoryEntry[]>(`/manuscripts/${bookId}/chapters/${chapterId}/history`)
   }
 
-  async getDraftChapterHistory(
-    bookId: string,
-    section: SectionType,
-    slug: string,
-  ): Promise<CasHistoryEntry[]> {
+  async getDraftChapterHistory(bookId: string, chapterId: string): Promise<CasHistoryEntry[]> {
     return this.json<CasHistoryEntry[]>(
-      `/manuscripts/${bookId}/drafts/chapters/${section}/${slug}/history`,
+      `/manuscripts/${bookId}/chapters/${chapterId}/sandbox/history`,
     )
   }
 

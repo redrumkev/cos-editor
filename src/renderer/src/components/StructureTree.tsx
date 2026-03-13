@@ -4,7 +4,7 @@ import type { ChapterSummary, ManuscriptStructure, SectionType } from '../../../
 interface StructureTreeProps {
   manuscript: ManuscriptStructure | null
   bufferState: { section: string; slug: string; dirty: boolean } | null
-  onSelectChapter: (section: SectionType, slug: string) => void
+  onSelectChapter: (section: SectionType, chapter: ChapterSummary) => void
 }
 
 interface SectionGroupProps {
@@ -14,7 +14,7 @@ interface SectionGroupProps {
   activeSection: string | null
   activeSlug: string | null
   dirty: boolean
-  onSelect: (section: SectionType, slug: string) => void
+  onSelect: (section: SectionType, chapter: ChapterSummary) => void
 }
 
 const VIRTUALIZE_THRESHOLD = 100
@@ -84,7 +84,7 @@ function SectionGroup({
               <button
                 key={ch.slug}
                 type="button"
-                onClick={() => onSelect(sectionType, ch.slug)}
+                onClick={() => onSelect(sectionType, ch)}
                 className={`flex items-center gap-1.5 w-full text-left px-2 py-1 text-sm truncate transition-colors duration-[--duration-normal] ${
                   isActive
                     ? 'bg-bg-hover text-accent'
@@ -120,40 +120,40 @@ export function StructureTree({
 
   return (
     <div className="py-1 overflow-y-auto flex-1 scrollbar-thin">
-        <SectionGroup
-          label="Front Matter"
-          sectionType="front"
-          chapters={manuscript.front}
-          activeSection={activeSection}
-          activeSlug={activeSlug}
-          dirty={dirty}
+      <SectionGroup
+        label="Front Matter"
+        sectionType="front"
+        chapters={manuscript.front}
+        activeSection={activeSection}
+        activeSlug={activeSlug}
+        dirty={dirty}
         onSelect={onSelectChapter}
       />
-        <SectionGroup
-          label="Body"
-          sectionType="body"
-          chapters={manuscript.body}
-          activeSection={activeSection}
-          activeSlug={activeSlug}
-          dirty={dirty}
+      <SectionGroup
+        label="Body"
+        sectionType="body"
+        chapters={manuscript.body}
+        activeSection={activeSection}
+        activeSlug={activeSlug}
+        dirty={dirty}
         onSelect={onSelectChapter}
       />
-        <SectionGroup
-          label="Back Matter"
-          sectionType="back"
-          chapters={manuscript.back}
-          activeSection={activeSection}
-          activeSlug={activeSlug}
-          dirty={dirty}
-          onSelect={onSelectChapter}
-        />
-        <SectionGroup
-          label="Floating"
-          sectionType="floating"
-          chapters={manuscript.floating}
-          activeSection={activeSection}
-          activeSlug={activeSlug}
-          dirty={dirty}
+      <SectionGroup
+        label="Back Matter"
+        sectionType="back"
+        chapters={manuscript.back}
+        activeSection={activeSection}
+        activeSlug={activeSlug}
+        dirty={dirty}
+        onSelect={onSelectChapter}
+      />
+      <SectionGroup
+        label="Floating"
+        sectionType="floating"
+        chapters={manuscript.floating}
+        activeSection={activeSection}
+        activeSlug={activeSlug}
+        dirty={dirty}
         onSelect={onSelectChapter}
       />
     </div>

@@ -57,6 +57,7 @@ export type BufferMode = 'live' | 'draft'
 // Payload types
 export interface BufferOpenRequest {
   bookId: string
+  chapterId: string
   section: SectionType
   slug: string
   mode?: BufferMode
@@ -68,6 +69,7 @@ export interface BufferApplyChangesRequest {
 
 export interface BufferState {
   bookId: string
+  chapterId: string
   section: string
   slug: string
   content: string
@@ -98,6 +100,7 @@ export type ConnectionTestResult = {
 
 export interface NavLoadHistoryRequest {
   bookId: string
+  chapterId: string
   section: SectionType
   slug: string
   mode?: BufferMode
@@ -115,6 +118,7 @@ export interface BufferConflict {
 
 export interface NavLoadVersionRequest {
   bookId: string
+  chapterId: string
   section: SectionType
   slug: string
   hash: string
@@ -122,6 +126,7 @@ export interface NavLoadVersionRequest {
 
 export interface NavRestoreVersionRequest {
   bookId: string
+  chapterId: string
   section: SectionType
   slug: string
   targetHash: string

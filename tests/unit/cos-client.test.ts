@@ -15,6 +15,11 @@ function mockResponse(body: unknown, status = 200, headers: Record<string, strin
   }
 }
 
+const BOOK_ID = 'book-id'
+const CHAPTER_ID = 'chapter-1'
+const FRONT_CHAPTER_ID = 'preface-id'
+const BACK_CHAPTER_ID = 'appendix-id'
+
 describe('CosClient', () => {
   // Import dynamically after mock is set up
   // biome-ignore lint/suspicious/noExplicitAny: dynamic import for test setup
@@ -36,8 +41,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Chapter 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -49,10 +58,10 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.getChapter('book-id', 'body', 'ch-1')
+      await client.getChapter(BOOK_ID, CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/chapters/body/ch-1',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}`,
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
@@ -66,8 +75,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: FRONT_CHAPTER_ID,
             slug: 'preface',
             title: 'Preface',
+            chapter_kind: 'preface',
+            zone: 'front',
+            status: 'draft',
             content_draft: '# Preface',
             content_published: null,
             word_count: 1,
@@ -79,10 +92,10 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.getChapter('my-book', 'front', 'preface')
+      await client.getChapter('my-book', FRONT_CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/my-book/chapters/front/preface',
+        `http://localhost:8000/manuscripts/my-book/chapters/${FRONT_CHAPTER_ID}`,
         expect.objectContaining({
           headers: expect.objectContaining({
             'X-Tenant-ID': 'default',
@@ -95,8 +108,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Chapter 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -108,7 +125,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getChapter('book-id', 'body', 'ch-1')
+      const result = await client.getChapter(BOOK_ID, CHAPTER_ID)
 
       expect(result.contentHash).toBe('abc123')
     })
@@ -117,8 +134,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Chapter 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -130,7 +151,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getChapter('book-id', 'body', 'ch-1')
+      const result = await client.getChapter(BOOK_ID, CHAPTER_ID)
 
       // contentHash should match either ETag (unquoted) or X-Content-Hash
       expect(result.contentHash).toBe('hash-value')
@@ -140,8 +161,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Chapter 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -153,7 +178,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getChapter('book-id', 'body', 'ch-1')
+      const result = await client.getChapter(BOOK_ID, CHAPTER_ID)
 
       expect(result.chapter.slug).toBe('ch-1')
       expect(result.chapter.title).toBe('Chapter 1')
@@ -295,7 +320,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.saveChapter('book-id', 'body', 'ch-1', {
+      await client.saveChapter(BOOK_ID, CHAPTER_ID, {
         title: 'Chapter 1',
         content_draft: '# Updated',
         expected_head: 'abc123',
@@ -324,13 +349,13 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.saveChapter('book-id', 'back', 'appendix-a', {
+      await client.saveChapter(BOOK_ID, BACK_CHAPTER_ID, {
         title: 'Appendix A',
         content_draft: '# Appendix',
       })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/chapters/back/appendix-a',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${BACK_CHAPTER_ID}`,
         expect.objectContaining({ method: 'PUT' }),
       )
     })
@@ -350,7 +375,7 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.saveChapter('book-id', 'body', 'ch-1', {
+      const result = await client.saveChapter(BOOK_ID, CHAPTER_ID, {
         title: 'Chapter 1',
         content_draft: '# Updated',
         expected_head: 'abc123',
@@ -365,7 +390,7 @@ describe('CosClient', () => {
 
       const client = new CosClient('http://localhost:8000', 'default')
       await expect(
-        client.saveChapter('book-id', 'body', 'ch-1', {
+        client.saveChapter(BOOK_ID, CHAPTER_ID, {
           title: 'Ch 1',
           content_draft: 'x',
         }),
@@ -378,7 +403,7 @@ describe('CosClient', () => {
       const { ConcurrentModificationError } = await import('../../src/main/cos-client')
       const client = new CosClient('http://localhost:8000', 'default')
       await expect(
-        client.saveChapter('book-id', 'body', 'ch-1', {
+        client.saveChapter(BOOK_ID, CHAPTER_ID, {
           title: 'Ch 1',
           content_draft: 'x',
         }),
@@ -416,8 +441,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Ch 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -428,9 +457,9 @@ describe('CosClient', () => {
         ),
       )
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.getChapterAtHash('book-id', 'body', 'ch-1', 'abc123')
+      await client.getChapterAtHash(BOOK_ID, CHAPTER_ID, 'abc123')
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/chapters/body/ch-1/at/abc123',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/at/abc123`,
         expect.anything(),
       )
     })
@@ -439,8 +468,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Ch 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Hello',
             content_published: null,
             word_count: 1,
@@ -451,7 +484,7 @@ describe('CosClient', () => {
         ),
       )
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getChapterAtHash('book-id', 'body', 'ch-1', 'hash456')
+      const result = await client.getChapterAtHash(BOOK_ID, CHAPTER_ID, 'hash456')
       expect(result.contentHash).toBe('hash456')
       expect(result.chapter.slug).toBe('ch-1')
     })
@@ -462,8 +495,12 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(
         mockResponse(
           {
+            id: CHAPTER_ID,
             slug: 'ch-1',
             title: 'Chapter 1',
+            chapter_kind: 'body',
+            zone: 'body',
+            status: 'draft',
             content_draft: '# Draft content',
             content_published: null,
             word_count: 2,
@@ -475,10 +512,10 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.getDraftChapter('book-id', 'body', 'ch-1')
+      const result = await client.getDraftChapter(BOOK_ID, CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox`,
         expect.objectContaining({
           headers: expect.objectContaining({ 'X-Tenant-ID': 'default' }),
         }),
@@ -504,14 +541,14 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.saveDraftChapter('book-id', 'body', 'ch-1', {
+      await client.saveDraftChapter(BOOK_ID, CHAPTER_ID, {
         title: 'Chapter 1',
         content_draft: '# Updated draft',
         expected_head: 'draft-hash',
       })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox`,
         expect.objectContaining({ method: 'PUT' }),
       )
       const [, opts] = mockFetch.mock.calls[0]
@@ -535,14 +572,14 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      const result = await client.acceptDraft('book-id', 'body', 'ch-1', {
+      const result = await client.acceptDraft(BOOK_ID, CHAPTER_ID, {
         expected_draft_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
       })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1/accept',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox/accept`,
         expect.objectContaining({ method: 'POST' }),
       )
       expect(result.contentHash).toBe('accepted-hash')
@@ -556,10 +593,10 @@ describe('CosClient', () => {
       )
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await client.getDraftChapterHistory('book-id', 'body', 'ch-1')
+      await client.getDraftChapterHistory(BOOK_ID, CHAPTER_ID)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/manuscripts/book-id/drafts/chapters/body/ch-1/history',
+        `http://localhost:8000/manuscripts/${BOOK_ID}/chapters/${CHAPTER_ID}/sandbox/history`,
         expect.objectContaining({
           headers: expect.objectContaining({ 'X-Tenant-ID': 'default' }),
         }),
@@ -631,7 +668,7 @@ describe('CosClient', () => {
 
       const { NotFoundError } = await import('../../src/main/cos-client')
       const client = new CosClient('http://localhost:8000', 'default')
-      await expect(client.getChapter('book-id', 'body', 'missing')).rejects.toBeInstanceOf(
+      await expect(client.getChapter(BOOK_ID, 'missing-chapter')).rejects.toBeInstanceOf(
         NotFoundError,
       )
     })
@@ -640,14 +677,14 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ detail: 'Not found' }, 404))
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await expect(client.getChapter('book-id', 'body', 'missing')).rejects.toThrow()
+      await expect(client.getChapter(BOOK_ID, 'missing-chapter')).rejects.toThrow()
     })
 
     it('throws on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await expect(client.getChapter('book-id', 'body', 'ch-1')).rejects.toThrow('Network error')
+      await expect(client.getChapter(BOOK_ID, CHAPTER_ID)).rejects.toThrow('Network error')
     })
 
     it('throws CosClientError on network error', async () => {
@@ -655,7 +692,7 @@ describe('CosClient', () => {
 
       const { CosClientError } = await import('../../src/main/cos-client')
       const client = new CosClient('http://localhost:8000', 'default')
-      await expect(client.getChapter('book-id', 'body', 'ch-1')).rejects.toBeInstanceOf(
+      await expect(client.getChapter(BOOK_ID, CHAPTER_ID)).rejects.toBeInstanceOf(
         CosClientError,
       )
     })
@@ -664,7 +701,7 @@ describe('CosClient', () => {
       mockFetch.mockResolvedValueOnce(mockResponse({ detail: 'Internal server error' }, 500))
 
       const client = new CosClient('http://localhost:8000', 'default')
-      await expect(client.getChapter('book-id', 'body', 'ch-1')).rejects.toThrow()
+      await expect(client.getChapter(BOOK_ID, CHAPTER_ID)).rejects.toThrow()
     })
   })
 })

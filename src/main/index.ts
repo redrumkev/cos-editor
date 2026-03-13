@@ -282,7 +282,7 @@ async function checkCosConnection(): Promise<void> {
 function registerIpcHandlers(): void {
   // Buffer operations
   ipcMain.handle(IPC.BUFFER_OPEN, async (_event, req: BufferOpenRequest) => {
-    return buffer.open(req.bookId, req.section, req.slug, req.mode ?? 'live')
+    return buffer.open(req.bookId, req.chapterId, req.section, req.slug, req.mode ?? 'live')
   })
 
   ipcMain.handle(IPC.BUFFER_APPLY_CHANGES, (_event, req: BufferApplyChangesRequest) => {
@@ -357,23 +357,18 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC.NAV_LOAD_HISTORY, async (_event, req: NavLoadHistoryRequest) => {
     if (req.mode === 'draft') {
-      return cosClient.getDraftChapterHistory(req.bookId, req.section, req.slug)
+      return cosClient.getDraftChapterHistory(req.bookId, req.chapterId)
     }
-    return cosClient.getChapterHistory(req.bookId, req.section, req.slug)
+    return cosClient.getChapterHistory(req.bookId, req.chapterId)
   })
 
   ipcMain.handle(IPC.NAV_LOAD_VERSION, async (_event, req: NavLoadVersionRequest) => {
-    const { chapter } = await cosClient.getChapterAtHash(
-      req.bookId,
-      req.section,
-      req.slug,
-      req.hash,
-    )
+    const { chapter } = await cosClient.getChapterAtHash(req.bookId, req.chapterId, req.hash)
     return chapter
   })
 
   ipcMain.handle(IPC.NAV_RESTORE_VERSION, async (_event, req: NavRestoreVersionRequest) => {
-    return cosClient.revertChapter(req.bookId, req.section, req.slug, {
+    return cosClient.revertChapter(req.bookId, req.chapterId, {
       target_hash: req.targetHash,
       expected_head: req.expectedHead ?? undefined,
     })

@@ -17,6 +17,7 @@ export class BufferManager extends EventEmitter {
 
   // Current buffer state
   private bookId: string | null = null
+  private chapterId: string | null = null
   private section: SectionType | null = null
   private slug: string | null = null
   private title: string | null = null
@@ -38,6 +39,7 @@ export class BufferManager extends EventEmitter {
 
   async open(
     bookId: string,
+    chapterId: string,
     section: SectionType,
     slug: string,
     mode: BufferMode = 'live',
@@ -59,14 +61,14 @@ export class BufferManager extends EventEmitter {
     if (mode === 'draft') {
       // Draft mode: try draft endpoint, fallback to live (seed from live)
       try {
-        const { chapter, contentHash } = await this.client.getDraftChapter(bookId, section, slug)
+        const { chapter, contentHash } = await this.client.getDraftChapter(bookId, chapterId)
         this.content = chapter.content_draft ?? chapter.content_published ?? ''
         this.title = chapter.title
         this.headHash = contentHash || null
       } catch (err) {
         if (err instanceof NotFoundError) {
           // No draft exists yet — seed from live
-          const { chapter } = await this.client.getChapter(bookId, section, slug)
+          const { chapter } = await this.client.getChapter(bookId, chapterId)
           this.content = chapter.content_draft ?? chapter.content_published ?? ''
           this.title = chapter.title
           this.headHash = null // New draft, no head yet
@@ -76,14 +78,14 @@ export class BufferManager extends EventEmitter {
       }
       // Also fetch live head for accept CAS
       try {
-        const { contentHash: liveHash } = await this.client.getChapter(bookId, section, slug)
+        const { contentHash: liveHash } = await this.client.getChapter(bookId, chapterId)
         this.liveHeadHash = liveHash || null
       } catch {
         this.liveHeadHash = null
       }
     } else {
       // Live mode: existing flow
-      const { chapter, contentHash } = await this.client.getChapter(bookId, section, slug)
+      const { chapter, contentHash } = await this.client.getChapter(bookId, chapterId)
       this.content = chapter.content_draft ?? chapter.content_published ?? ''
       this.title = chapter.title
       this.headHash = contentHash || null
@@ -91,6 +93,7 @@ export class BufferManager extends EventEmitter {
     }
 
     this.bookId = bookId
+    this.chapterId = chapterId
     this.section = section
     this.slug = slug
     this.dirty = false
@@ -112,7 +115,7 @@ export class BufferManager extends EventEmitter {
   }
 
   async save(): Promise<BufferState> {
-    if (!this.bookId || !this.section || !this.slug) {
+    if (!this.bookId || !this.chapterId || !this.section || !this.slug) {
       throw new Error('No buffer is open')
     }
 
@@ -133,15 +136,10 @@ export class BufferManager extends EventEmitter {
 
       let contentHash: string
       if (this.mode === 'draft') {
-        const result = await this.client.saveDraftChapter(
-          this.bookId,
-          this.section,
-          this.slug,
-          saveBody,
-        )
+        const result = await this.client.saveDraftChapter(this.bookId, this.chapterId, saveBody)
         contentHash = result.contentHash
       } else {
-        const result = await this.client.saveChapter(this.bookId, this.section, this.slug, saveBody)
+        const result = await this.client.saveChapter(this.bookId, this.chapterId, saveBody)
         contentHash = result.contentHash
       }
 
@@ -174,7 +172,7 @@ export class BufferManager extends EventEmitter {
   }
 
   async reloadFromServer(): Promise<BufferState> {
-    if (!this.bookId || !this.section || !this.slug) {
+    if (!this.bookId || !this.chapterId || !this.section || !this.slug) {
       throw new Error('No buffer is open')
     }
 
@@ -184,15 +182,14 @@ export class BufferManager extends EventEmitter {
       try {
         const { chapter, contentHash } = await this.client.getDraftChapter(
           this.bookId,
-          this.section,
-          this.slug,
+          this.chapterId,
         )
         this.content = chapter.content_draft ?? chapter.content_published ?? ''
         this.title = chapter.title
         this.headHash = contentHash || null
       } catch (err) {
         if (err instanceof NotFoundError) {
-          const { chapter } = await this.client.getChapter(this.bookId, this.section, this.slug)
+          const { chapter } = await this.client.getChapter(this.bookId, this.chapterId)
           this.content = chapter.content_draft ?? chapter.content_published ?? ''
           this.title = chapter.title
           this.headHash = null
@@ -202,21 +199,13 @@ export class BufferManager extends EventEmitter {
       }
       // Refresh live head
       try {
-        const { contentHash: liveHash } = await this.client.getChapter(
-          this.bookId,
-          this.section,
-          this.slug,
-        )
+        const { contentHash: liveHash } = await this.client.getChapter(this.bookId, this.chapterId)
         this.liveHeadHash = liveHash || null
       } catch {
         this.liveHeadHash = null
       }
     } else {
-      const { chapter, contentHash } = await this.client.getChapter(
-        this.bookId,
-        this.section,
-        this.slug,
-      )
+      const { chapter, contentHash } = await this.client.getChapter(this.bookId, this.chapterId)
       this.content = chapter.content_draft ?? chapter.content_published ?? ''
       this.title = chapter.title
       this.headHash = contentHash || null
@@ -232,18 +221,14 @@ export class BufferManager extends EventEmitter {
   }
 
   async forceSave(): Promise<BufferState> {
-    if (!this.bookId || !this.section || !this.slug) {
+    if (!this.bookId || !this.chapterId || !this.section || !this.slug) {
       throw new Error('No buffer is open')
     }
 
     // Fetch latest head hash without overwriting content
     if (this.mode === 'draft') {
       try {
-        const { contentHash } = await this.client.getDraftChapter(
-          this.bookId,
-          this.section,
-          this.slug,
-        )
+        const { contentHash } = await this.client.getDraftChapter(this.bookId, this.chapterId)
         this.headHash = contentHash || null
       } catch (err) {
         if (err instanceof NotFoundError) {
@@ -253,7 +238,7 @@ export class BufferManager extends EventEmitter {
         }
       }
     } else {
-      const { contentHash } = await this.client.getChapter(this.bookId, this.section, this.slug)
+      const { contentHash } = await this.client.getChapter(this.bookId, this.chapterId)
       this.headHash = contentHash || null
       this.liveHeadHash = contentHash || null
     }
@@ -262,7 +247,7 @@ export class BufferManager extends EventEmitter {
   }
 
   async acceptDraft(actor = 'user'): Promise<BufferState> {
-    if (!this.bookId || !this.section || !this.slug) {
+    if (!this.bookId || !this.chapterId || !this.section || !this.slug) {
       throw new Error('No buffer is open')
     }
     if (this.mode !== 'draft') {
@@ -273,7 +258,7 @@ export class BufferManager extends EventEmitter {
     }
 
     try {
-      const { contentHash } = await this.client.acceptDraft(this.bookId, this.section, this.slug, {
+      const { contentHash } = await this.client.acceptDraft(this.bookId, this.chapterId, {
         expected_draft_head: this.headHash,
         expected_live_head: this.liveHeadHash,
         actor,
@@ -306,6 +291,7 @@ export class BufferManager extends EventEmitter {
   getState(): BufferState {
     return {
       bookId: this.bookId ?? '',
+      chapterId: this.chapterId ?? '',
       section: this.section ?? '',
       slug: this.slug ?? '',
       content: this.content,

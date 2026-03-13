@@ -1,4 +1,9 @@
-import type { CasHistoryEntry, ManuscriptStructure, SectionType } from '../../../shared/cos-types'
+import type {
+  CasHistoryEntry,
+  ChapterSummary,
+  ManuscriptStructure,
+  SectionType,
+} from '../../../shared/cos-types'
 import type { BufferState } from '../../../shared/ipc'
 import { ChangesView } from './ChangesView'
 import { OutlineView } from './OutlineView'
@@ -13,7 +18,7 @@ interface LeftPaneProps {
   onTabChange: (tab: TabId) => void
   bufferState: BufferState | null
   historyEntries: CasHistoryEntry[]
-  onSelectChapter: (section: SectionType, slug: string) => void
+  onSelectChapter: (section: SectionType, chapter: ChapterSummary) => void
   onViewVersion: (hash: string) => void
   activeVersionHash: string | null
 }

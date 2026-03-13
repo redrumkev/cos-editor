@@ -4,6 +4,7 @@ import type {
   CaptureState,
   CasHistoryEntry,
   ChapterContent,
+  ChapterSummary,
   ManuscriptStructure,
   SectionType,
 } from '../../shared/cos-types'
@@ -27,6 +28,30 @@ import { VersionViewer } from './components/VersionViewer'
 import { EditorMount } from './editor/EditorMount'
 
 type TabId = 'structure' | 'outline' | 'changes'
+
+function getSectionChapters(
+  manuscript: ManuscriptStructure,
+  section: SectionType,
+): ChapterSummary[] {
+  switch (section) {
+    case 'front':
+      return manuscript.front
+    case 'body':
+      return manuscript.body
+    case 'back':
+      return manuscript.back
+    case 'floating':
+      return manuscript.floating
+  }
+}
+
+function findChapterSummary(
+  manuscript: ManuscriptStructure,
+  section: SectionType,
+  slug: string,
+): ChapterSummary | null {
+  return getSectionChapters(manuscript, section).find((chapter) => chapter.slug === slug) ?? null
+}
 
 function App(): React.JSX.Element {
   const [bufferState, setBufferState] = useState<BufferState | null>(null)
@@ -98,11 +123,28 @@ function App(): React.JSX.Element {
                         string,
                       ]
                       if (section && slug) {
+                        const chapter = findChapterSummary(ms, section, slug)
+                        if (!chapter) {
+                          layoutRestoredRef.current = true
+                          return
+                        }
                         window.cosEditor
-                          .openBuffer({ bookId: book.id, section, slug, mode: 'live' })
+                          .openBuffer({
+                            bookId: book.id,
+                            chapterId: chapter.id,
+                            section,
+                            slug,
+                            mode: 'live',
+                          })
                           .catch(console.error)
                         window.cosEditor
-                          .loadHistory({ bookId: book.id, section, slug, mode: 'live' })
+                          .loadHistory({
+                            bookId: book.id,
+                            chapterId: chapter.id,
+                            section,
+                            slug,
+                            mode: 'live',
+                          })
                           .then(setHistoryEntries)
                           .catch(console.error)
                       }
@@ -145,17 +187,29 @@ function App(): React.JSX.Element {
   }, [])
 
   const handleSelectChapter = useCallback(
-    (section: SectionType, slug: string) => {
+    (section: SectionType, chapter: ChapterSummary) => {
       if (!selectedBook) return
       setViewingVersion(null)
       setChapterLoading(true)
 
       window.cosEditor
-        .openBuffer({ bookId: selectedBook.id, section, slug, mode: bufferMode })
+        .openBuffer({
+          bookId: selectedBook.id,
+          chapterId: chapter.id,
+          section,
+          slug: chapter.slug,
+          mode: bufferMode,
+        })
         .catch(console.error)
 
       window.cosEditor
-        .loadHistory({ bookId: selectedBook.id, section, slug, mode: bufferMode })
+        .loadHistory({
+          bookId: selectedBook.id,
+          chapterId: chapter.id,
+          section,
+          slug: chapter.slug,
+          mode: bufferMode,
+        })
         .then(setHistoryEntries)
         .catch(console.error)
     },
@@ -172,6 +226,7 @@ function App(): React.JSX.Element {
       window.cosEditor
         .loadVersion({
           bookId: selectedBook.id,
+          chapterId: bufferState.chapterId,
           section: bufferState.section as SectionType,
           slug: bufferState.slug,
           hash,
@@ -193,6 +248,7 @@ function App(): React.JSX.Element {
       window.cosEditor
         .restoreVersion({
           bookId: selectedBook.id,
+          chapterId: bufferState.chapterId,
           section,
           slug,
           targetHash: hash,
@@ -202,10 +258,22 @@ function App(): React.JSX.Element {
           setViewingVersion(null)
           // Re-open buffer and reload history
           window.cosEditor
-            .openBuffer({ bookId: selectedBook.id, section, slug, mode: bufferMode })
+            .openBuffer({
+              bookId: selectedBook.id,
+              chapterId: bufferState.chapterId,
+              section,
+              slug,
+              mode: bufferMode,
+            })
             .catch(console.error)
           window.cosEditor
-            .loadHistory({ bookId: selectedBook.id, section, slug, mode: bufferMode })
+            .loadHistory({
+              bookId: selectedBook.id,
+              chapterId: bufferState.chapterId,
+              section,
+              slug,
+              mode: bufferMode,
+            })
             .then(setHistoryEntries)
             .catch(console.error)
         })
@@ -229,6 +297,7 @@ function App(): React.JSX.Element {
         window.cosEditor
           .openBuffer({
             bookId: selectedBook.id,
+            chapterId: bufferState.chapterId,
             section: bufferState.section as SectionType,
             slug: bufferState.slug,
             mode,
@@ -238,6 +307,7 @@ function App(): React.JSX.Element {
         window.cosEditor
           .loadHistory({
             bookId: selectedBook.id,
+            chapterId: bufferState.chapterId,
             section: bufferState.section as SectionType,
             slug: bufferState.slug,
             mode,

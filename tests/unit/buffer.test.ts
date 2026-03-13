@@ -38,8 +38,12 @@ vi.mock('../../src/main/cos-client', () => {
 // Standard chapter response for reuse
 const CHAPTER_RESPONSE = {
   chapter: {
+    id: 'chapter-1',
     slug: 'ch-1',
     title: 'Chapter 1',
+    chapter_kind: 'body',
+    zone: 'body',
+    status: 'draft',
     content_draft: '# Hello World',
     content_published: null,
     word_count: 2,
@@ -47,6 +51,10 @@ const CHAPTER_RESPONSE = {
   },
   contentHash: 'abc123',
 }
+
+const BOOK_ID = 'book-1'
+const CHAPTER_ID = 'chapter-1'
+const CHAPTER_ID_2 = 'chapter-2'
 
 const SAVE_RESPONSE = {
   response: {
@@ -80,9 +88,9 @@ describe('BufferManager', () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open('book-1', 'body', 'ch-1')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
-      expect(mockClient.getChapter).toHaveBeenCalledWith('book-1', 'body', 'ch-1')
+      expect(mockClient.getChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
       expect(state.content).toBe('# Hello World')
       expect(state.headHash).toBe('abc123')
       expect(state.dirty).toBe(false)
@@ -93,8 +101,12 @@ describe('BufferManager', () => {
     it('single buffer constraint: opening new buffer replaces old one', async () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE).mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID_2,
           slug: 'ch-2',
           title: 'Chapter 2',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Second',
           content_published: null,
           word_count: 1,
@@ -104,8 +116,8 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
-      const state = await buffer.open('book-1', 'body', 'ch-2')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID_2, 'body', 'ch-2')
 
       expect(state.slug).toBe('ch-2')
       expect(state.content).toBe('# Second')
@@ -115,8 +127,12 @@ describe('BufferManager', () => {
     it('uses content_published when content_draft is null', async () => {
       mockClient.getChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: null,
           content_published: '# Published Content',
           word_count: 2,
@@ -126,7 +142,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open('book-1', 'body', 'ch-1')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       expect(state.content).toBe('# Published Content')
     })
@@ -134,8 +150,12 @@ describe('BufferManager', () => {
     it('uses empty string when both content fields are null', async () => {
       mockClient.getChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: null,
           content_published: null,
           word_count: 0,
@@ -145,7 +165,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open('book-1', 'body', 'ch-1')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       expect(state.content).toBe('')
     })
@@ -155,8 +175,12 @@ describe('BufferManager', () => {
     it('calls getDraftChapter when mode is draft', async () => {
       mockClient.getDraftChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Draft content',
           content_published: null,
           word_count: 2,
@@ -170,9 +194,9 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
 
-      expect(mockClient.getDraftChapter).toHaveBeenCalledWith('book-1', 'body', 'ch-1')
+      expect(mockClient.getDraftChapter).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID)
       expect(state.content).toBe('# Draft content')
       expect(state.headHash).toBe('draft-hash')
       expect(state.mode).toBe('draft')
@@ -191,7 +215,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      const state = await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      const state = await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
 
       expect(mockClient.getDraftChapter).toHaveBeenCalled()
       expect(mockClient.getChapter).toHaveBeenCalled()
@@ -207,7 +231,7 @@ describe('BufferManager', () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       const state = buffer.applyChanges('# Hello Updated')
 
       expect(state.dirty).toBe(true)
@@ -218,7 +242,7 @@ describe('BufferManager', () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       const stateHandler = vi.fn()
       buffer.on('state', stateHandler)
@@ -235,14 +259,13 @@ describe('BufferManager', () => {
       mockClient.saveChapter.mockResolvedValueOnce(SAVE_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Hello Updated')
       await buffer.save()
 
       expect(mockClient.saveChapter).toHaveBeenCalledWith(
-        'book-1',
-        'body',
-        'ch-1',
+        BOOK_ID,
+        CHAPTER_ID,
         expect.objectContaining({
           expected_head: 'abc123',
         }),
@@ -254,7 +277,7 @@ describe('BufferManager', () => {
       mockClient.saveChapter.mockResolvedValueOnce(SAVE_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Hello Updated')
       const state = await buffer.save()
 
@@ -272,8 +295,12 @@ describe('BufferManager', () => {
     it('calls saveDraftChapter with expected_head', async () => {
       mockClient.getDraftChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Draft',
           content_published: null,
           word_count: 1,
@@ -293,14 +320,13 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
       buffer.applyChanges('# Draft Updated')
       const state = await buffer.save()
 
       expect(mockClient.saveDraftChapter).toHaveBeenCalledWith(
-        'book-1',
-        'body',
-        'ch-1',
+        BOOK_ID,
+        CHAPTER_ID,
         expect.objectContaining({
           expected_head: 'draft-hash',
           content_draft: '# Draft Updated',
@@ -320,7 +346,7 @@ describe('BufferManager', () => {
       )
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Conflict')
 
       const conflictHandler = vi.fn()
@@ -341,8 +367,12 @@ describe('BufferManager', () => {
     it('calls client.acceptDraft and flips mode to live', async () => {
       mockClient.getDraftChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Draft',
           content_published: null,
           word_count: 1,
@@ -364,10 +394,10 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
       const state = await buffer.acceptDraft('user')
 
-      expect(mockClient.acceptDraft).toHaveBeenCalledWith('book-1', 'body', 'ch-1', {
+      expect(mockClient.acceptDraft).toHaveBeenCalledWith(BOOK_ID, CHAPTER_ID, {
         expected_draft_head: 'draft-hash',
         expected_live_head: 'live-hash',
         actor: 'user',
@@ -381,7 +411,7 @@ describe('BufferManager', () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       await expect(buffer.acceptDraft('user')).rejects.toThrow('not in draft mode')
     })
@@ -394,7 +424,7 @@ describe('BufferManager', () => {
         .mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
 
       // headHash is null for a new draft
       await expect(buffer.acceptDraft('user')).rejects.toThrow('no draft head hash')
@@ -404,8 +434,12 @@ describe('BufferManager', () => {
       const { ConcurrentModificationError } = await import('../../src/main/cos-client')
       mockClient.getDraftChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Draft',
           content_published: null,
           word_count: 1,
@@ -419,7 +453,7 @@ describe('BufferManager', () => {
       )
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1', 'draft')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1', 'draft')
 
       const conflictHandler = vi.fn()
       buffer.on('conflict', conflictHandler)
@@ -435,8 +469,12 @@ describe('BufferManager', () => {
     it('re-fetches and resets state', async () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE).mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: '# Updated from server',
           content_published: null,
           word_count: 4,
@@ -446,7 +484,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Local changes')
       expect(buffer.getState().dirty).toBe(true)
 
@@ -478,7 +516,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Force save content')
 
       const state = await buffer.forceSave()
@@ -487,9 +525,8 @@ describe('BufferManager', () => {
       expect(state.dirty).toBe(false)
       // Verify save was called with the refreshed head hash
       expect(mockClient.saveChapter).toHaveBeenCalledWith(
-        'book-1',
-        'body',
-        'ch-1',
+        BOOK_ID,
+        CHAPTER_ID,
         expect.objectContaining({
           expected_head: 'latest-hash',
         }),
@@ -505,7 +542,7 @@ describe('BufferManager', () => {
       mockClient.saveChapter.mockResolvedValue(SAVE_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       // Rapid changes — should NOT trigger save immediately
       buffer.applyChanges('# Change 1')
@@ -531,7 +568,7 @@ describe('BufferManager', () => {
       mockClient.saveChapter.mockResolvedValue(SAVE_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
 
       buffer.applyChanges('# Change 1')
       await vi.advanceTimersByTimeAsync(2000)
@@ -555,8 +592,12 @@ describe('BufferManager', () => {
     it('returns correct word count', async () => {
       mockClient.getChapter.mockResolvedValueOnce({
         chapter: {
+          id: CHAPTER_ID,
           slug: 'ch-1',
           title: 'Chapter 1',
+          chapter_kind: 'body',
+          zone: 'body',
+          status: 'draft',
           content_draft: 'one two three four five',
           content_published: null,
           word_count: 5,
@@ -566,7 +607,7 @@ describe('BufferManager', () => {
       })
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       const state = buffer.getState()
 
       expect(state.wordCount).toBe(5)
@@ -591,7 +632,7 @@ describe('BufferManager', () => {
       mockClient.getChapter.mockResolvedValueOnce(CHAPTER_RESPONSE)
 
       const buffer = new BufferManager(mockClient)
-      await buffer.open('book-1', 'body', 'ch-1')
+      await buffer.open(BOOK_ID, CHAPTER_ID, 'body', 'ch-1')
       buffer.applyChanges('# Changed')
       buffer.destroy()
 
