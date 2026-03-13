@@ -55,7 +55,7 @@ Governed by the federal standard: `~/dev/NEXUS/standards/UI_INTERACTION_STANDARD
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd+D` | Toggle Live/Draft mode |
+| `Cmd+D` | Toggle Live/Sandbox mode |
 
 ## Forbidden Tools
 

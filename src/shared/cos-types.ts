@@ -25,6 +25,18 @@ export interface ChapterContent {
   metadata: Record<string, unknown>
 }
 
+export interface SandboxChapterContent {
+  id: string
+  slug: string
+  title: string
+  chapter_kind: ChapterKind
+  zone: ChapterZone
+  status: ChapterWorkflowStatus
+  sandbox_content: string | null
+  word_count: number
+  metadata: Record<string, unknown>
+}
+
 // Version response from PUT/DELETE/POST write endpoints
 export interface VersionResponse {
   content_hash: string
@@ -39,6 +51,12 @@ export interface SaveChapterRequest {
   content_draft?: string | null
   content_published?: string | null
   metadata?: Record<string, unknown>
+  expected_head?: string | null
+}
+
+export interface SaveSandboxChapterRequest {
+  title: string
+  sandbox_content?: string | null
   expected_head?: string | null
 }
 

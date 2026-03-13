@@ -501,8 +501,7 @@ describe('CosClient', () => {
             chapter_kind: 'body',
             zone: 'body',
             status: 'draft',
-            content_draft: '# Draft content',
-            content_published: null,
+            sandbox_content: '# Draft content',
             word_count: 2,
             metadata: {},
           },
@@ -521,7 +520,7 @@ describe('CosClient', () => {
         }),
       )
       expect(result.contentHash).toBe('draft-hash')
-      expect(result.chapter.content_draft).toBe('# Draft content')
+      expect(result.chapter.sandbox_content).toBe('# Draft content')
     })
   })
 
@@ -543,7 +542,7 @@ describe('CosClient', () => {
       const client = new CosClient('http://localhost:8000', 'default')
       await client.saveSandboxChapter(BOOK_ID, CHAPTER_ID, {
         title: 'Chapter 1',
-        content_draft: '# Updated draft',
+        sandbox_content: '# Updated draft',
         expected_head: 'draft-hash',
       })
 

@@ -13,7 +13,9 @@ import type {
   PublishChapterRequest,
   ReorderSectionRequest,
   RevertRequest,
+  SandboxChapterContent,
   SaveChapterRequest,
+  SaveSandboxChapterRequest,
   SectionType,
   VersionResponse,
 } from '../shared/cos-types'
@@ -172,9 +174,9 @@ export class CosClient {
   async getSandboxChapter(
     bookId: string,
     chapterId: string,
-  ): Promise<{ chapter: ChapterContent; contentHash: string }> {
+  ): Promise<{ chapter: SandboxChapterContent; contentHash: string }> {
     const res = await this.request(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox`)
-    const chapter = (await res.json()) as ChapterContent
+    const chapter = (await res.json()) as SandboxChapterContent
 
     let contentHash = ''
     const etag = res.headers.get('ETag')
@@ -230,7 +232,7 @@ export class CosClient {
   async saveSandboxChapter(
     bookId: string,
     chapterId: string,
-    body: SaveChapterRequest,
+    body: SaveSandboxChapterRequest,
   ): Promise<WriteResult> {
     return this.writeRequest(`/manuscripts/${bookId}/chapters/${chapterId}/sandbox`, {
       method: 'PUT',

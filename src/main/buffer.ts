@@ -60,7 +60,7 @@ export class BufferManager extends EventEmitter {
 
     if (mode === 'sandbox') {
       const { chapter, contentHash } = await this.client.getSandboxChapter(bookId, chapterId)
-      this.content = chapter.content_draft ?? chapter.content_published ?? ''
+      this.content = chapter.sandbox_content ?? ''
       this.title = chapter.title
       this.headHash = contentHash || null
 
@@ -118,7 +118,7 @@ export class BufferManager extends EventEmitter {
     try {
       const saveBody = {
         title: this.title ?? this.slug,
-        content_draft: this.content,
+        sandbox_content: this.content,
         expected_head: this.headHash,
       }
 
@@ -171,7 +171,7 @@ export class BufferManager extends EventEmitter {
         this.bookId,
         this.chapterId,
       )
-      this.content = chapter.content_draft ?? chapter.content_published ?? ''
+      this.content = chapter.sandbox_content ?? ''
       this.title = chapter.title
       this.headHash = contentHash || null
 
